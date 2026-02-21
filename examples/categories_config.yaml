@@ -1,0 +1,72 @@
+# Example category configuration for expense categorizer
+# Each category can have multiple keywords that will trigger categorization
+
+Groceries:
+  - Tesco
+  - Aldi
+  - Coop
+  - Carrefour
+  - SPAR
+  - SuperMarket
+
+Utilities:
+  - Electricity Company
+  - Water Works
+  - Gas Utility
+  - Internet Provider
+  - ELMŰ
+  - TIGÁZ
+  - Magyar Telekom
+
+Entertainment:
+  - Cinema
+  - Netflix
+  - Spotify
+  - Steam
+  - PlayStation
+  - Movie Tickets
+  - Theater
+
+Dining Out:
+  - Restaurant
+  - Café
+  - Coffee Shop
+  - Burger King
+  - McDonald's
+  - Pizza Hut
+  - Starbucks
+
+Shopping:
+  - SIMPLEP*PREMIUMEP
+  - Alza.hu
+  - eMAG.hu
+  - Amazon
+  - H&M
+  - ZARA
+  - IKEA
+
+Transportation:
+  - Uber
+  - Taxi
+  - Bus
+  - Metro
+  - Train
+  - Shell
+  - MOL
+  - BP Petrol
+
+Healthcare:
+  - Pharmacy
+  - Doctor
+  - Hospital
+  - Medical
+  - Clinic
+
+Subscriptions:
+  - Premium
+  - Subscription
+  - Monthly Fee
+  - Annual Fee
+
+Other:
+  - Miscellaneous

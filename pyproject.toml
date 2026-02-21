@@ -1,0 +1,99 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "personal-finance-toolkit"
+version = "0.1.0"
+description = "Collection of tools for personal finance management"
+readme = "README.md"
+requires-python = ">=3.12"
+license = {text = "MIT"}
+authors = [
+    {name = "Personal Finance Toolkit Contributors"}
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "pandas>=1.5.0",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-cov",
+    "ruff",
+    "ty",
+]
+
+[project.scripts]
+pft-categorize = "personal_finance_toolkit.cli:main_categorize"
+
+[tool.setuptools]
+packages = ["personal_finance_toolkit"]
+
+[tool.setuptools.package-dir]
+"personal_finance_toolkit" = "src/personal_finance_toolkit"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+# Select all rules and only disable specific ones
+select = ["ALL"]
+ignore = [
+    # Disable rules that conflict with code style or are less meaningful
+    "ANN001",  # Missing type annotation for function argument
+    "ANN002",  # Missing type annotation for *args
+    "ANN003",  # Missing type annotation for **kwargs
+    "ANN401",  # Dynamically typed expressions (Any) are disallowed
+    "D100",    # Missing docstring in public module
+    "D104",    # Missing docstring in public package
+    "COM812",  # Missing trailing comma (conflicts with formatting)
+    "ISC001",  # Implicit string concatenation (conflicts with formatting)
+    "TD001",   # Invalid TODO tag: %s
+    "TD002",   # Missing author in TODO
+    "TD003",   # Missing issue link on TODO
+    "FIX001",  # Line contains FIXME
+    "FIX002",  # Line contains TODO
+    "S101",    # Use of assert detected
+    "T201",    # `print` found (necessary for CLI tools, especially stdout output)
+    "C901",    # Function is too complex (useful but strict)
+    "PLR0912", # Too many branches (useful but strict)
+    "PLR0915", # Too many statements (useful but strict)
+    "TRY300",  # Consider moving statement to else block (impractical style rule)
+    "G004",    # Logging uses f-string (we use formatted strings intentionally)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = [
+    "S101",    # Allow assert in tests
+    "ANN001",  # Allow missing type hints in tests
+    "ANN002",  # Allow missing type hints in tests
+    "ANN003",  # Allow missing type hints in tests
+    "ANN201",  # Allow missing return type hints in tests
+]
+"src/personal_finance_toolkit/logging_config.py" = [
+    "BLE001",  # Allow catching blind Exception for fallback logging setup
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ty.environment]
+root = ["src"]
+
+[tool.ty.src]
+include = ["**/*.py"]
+exclude = []
+
+[tool.ty.rules]
+unresolved-import = "ignore"
