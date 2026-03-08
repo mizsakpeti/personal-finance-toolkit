@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from datetime import date
 from typing import TYPE_CHECKING
+
+from pydantic import BaseModel
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -11,21 +13,18 @@ if TYPE_CHECKING:
     from personal_finance_toolkit.config.category_config import CategoryConfig
 
 
-@dataclass
-class Transaction:
+class Transaction(BaseModel):
     """Represents a single transaction."""
 
     amount: float
     partner_name: str
     description: str
-    date: str
+    date: date
     category: str | None = None
 
     def __str__(self) -> str:
         """Return string representation of transaction."""
-        return (
-            f"{self.date}: {self.partner_name} ({self.amount}) - {self.category or 'Uncategorized'}"
-        )
+        return f"{self.date}: {self.partner_name} ({self.amount}) - {self.category or 'Uncategorized'}"
 
 
 class ExpenseCategorizer:
@@ -69,7 +68,9 @@ class ExpenseCategorizer:
         transaction.category = category or "Uncategorized"
         return transaction
 
-    def categorize_transactions(self, transactions: list[Transaction]) -> list[Transaction]:
+    def categorize_transactions(
+        self, transactions: list[Transaction]
+    ) -> list[Transaction]:
         """Categorize multiple transactions.
 
         Args:

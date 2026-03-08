@@ -41,7 +41,7 @@ def load_transactions_from_file(file_path: str, sheet_name: int = 0) -> pd.DataF
             delimiter = "\t" if "\t" in first_line else ","
         return pd.read_csv(path, sep=delimiter)
     if path.suffix.lower() in {".xlsx", ".xls"}:
-        return pd.read_excel(path, sheet_name=sheet_name)
+        return pd.read_excel(path, sheet_name=sheet_name, skiprows=3)
     msg = f"Unsupported file format: {path.suffix}"
     raise ValueError(msg)
 
@@ -160,7 +160,9 @@ def main_categorize() -> int:
         help="Name of the description column in bank statement (optional)",
     )
 
-    parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose logging")
+    parser.add_argument(
+        "-v", "--verbose", action="store_true", help="Enable verbose logging"
+    )
 
     parser.add_argument(
         "--log-level",
@@ -202,6 +204,7 @@ def main_categorize() -> int:
             column_mapping[args.description_column] = "description"
 
         df = df.rename(columns=column_mapping)
+        df = df.fillna({"partner_name": "Bank"})
 
         # Ensure required columns exist
         required_cols = ["partner_name", "amount", "date"]
@@ -224,7 +227,9 @@ def main_categorize() -> int:
             else:
                 df_categorized.to_excel(output_path, index=False)
 
-            message = f"Categorized {len(df_categorized)} transactions saved to {output_path}"
+            message = (
+                f"Categorized {len(df_categorized)} transactions saved to {output_path}"
+            )
             logger.info(message)
         else:
             # Print to stdout
