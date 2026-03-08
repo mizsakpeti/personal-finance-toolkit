@@ -107,14 +107,14 @@ hitel,,2026.01.07,-4990,HUF,eMAG.hu,,,RO21573 Budapest eMAG.hu,,2025.12.31 16:03
 ### Command Line Interface
 
 ```bash
-pft-categorize <bank_file> -c <config_file> [options]
+uv run pft-categorize <bank_file> -c <config_file> [options]
 ```
 
 ### Basic Example
 
 ```bash
 # Categorize a Hungarian bank statement
-pft-categorize bank_statement.csv \
+uv runpft-categorize bank_statement.csv \
   -c categories.yaml \
   -o categorized.csv
 ```
@@ -123,7 +123,7 @@ pft-categorize bank_statement.csv \
 
 ```bash
 # If your bank statement has different column names
-pft-categorize statement.xlsx \
+uv runpft-categorize statement.xlsx \
   -c categories.json \
   -o results.xlsx \
   --partner-column "Merchant" \
@@ -136,7 +136,7 @@ pft-categorize statement.xlsx \
 
 ```bash
 # Show categorization summary and statistics
-pft-categorize bank_statement.csv \
+uv runpft-categorize bank_statement.csv \
   -c categories.yaml \
   -o categorized.csv \
   -v
@@ -146,13 +146,13 @@ pft-categorize bank_statement.csv \
 
 ```bash
 # Display results instead of saving to file
-pft-categorize bank_statement.csv \
+uv run pft-categorize bank_statement.csv \
   -c categories.yaml
 ```
 
 ## Arguments and Options
 
-```
+```plaintext
 Positional Arguments:
   bank_file              Path to bank statement file (CSV or Excel)
 
@@ -406,7 +406,7 @@ pft-categorize /full/path/to/bank_statement.csv -c categories.yaml
 
 ### Issue: Column Not Found
 
-```
+```plaintext
 Error: Required column 'Partner' not found
 ```
 
