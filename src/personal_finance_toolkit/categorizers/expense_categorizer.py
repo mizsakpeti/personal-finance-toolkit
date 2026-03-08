@@ -131,6 +131,8 @@ class ExpenseCategorizer:
         """
         summary: dict[str, float] = {}
         for transaction in transactions:
+            if transaction.amount > 0:
+                continue  # Skip income transactions
             category = transaction.category or "Uncategorized"
             summary[category] = summary.get(category, 0) + abs(transaction.amount)
 

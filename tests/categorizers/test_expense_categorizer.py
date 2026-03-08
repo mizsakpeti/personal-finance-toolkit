@@ -1,5 +1,7 @@
 """Unit tests for ExpenseCategorizer and Transaction classes."""
 
+from datetime import date
+
 import pandas as pd
 import pytest
 
@@ -35,7 +37,7 @@ class TestTransaction:
         assert txn.amount == 50.0
         assert txn.partner_name == "Netflix"
         assert txn.description == "Monthly subscription"
-        assert txn.date == "2024-01-01"
+        assert txn.date == date(2024, 1, 1)
         assert txn.category == "Entertainment"
 
     def test_transaction_initialization_without_category(self, sample_transaction):
@@ -157,7 +159,9 @@ class TestExpenseCategorizer:
             ("Uber Ride", "Transportation"),
         ],
     )
-    def test_categorize_text_with_various_partners(self, categorizer, text, expected_category):
+    def test_categorize_text_with_various_partners(
+        self, categorizer, text, expected_category
+    ):
         """Test categorize_text with various partner names."""
         result = categorizer.categorize_text(text)
         assert result == expected_category
@@ -271,9 +275,9 @@ class TestExpenseCategorizer:
         ]
         results = categorizer.categorize_transactions(transactions)
 
-        assert results[0].date == "2024-01-01"
-        assert results[1].date == "2024-01-02"
-        assert results[2].date == "2024-01-03"
+        assert results[0].date == date(2024, 1, 1)
+        assert results[1].date == date(2024, 1, 2)
+        assert results[2].date == date(2024, 1, 3)
 
     def test_categorize_empty_transaction_list(self, categorizer):
         """Test categorizing an empty list of transactions."""
@@ -363,8 +367,20 @@ class TestExpenseCategorizer_Summary:
     def test_get_summary_single_category(self, categorizer):
         """Test get_summary with transactions in a single category."""
         transactions = [
-            Transaction(50.0, "Tesco", "", "2024-01-01", "Groceries"),
-            Transaction(30.0, "Aldi", "", "2024-01-02", "Groceries"),
+            Transaction(
+                amount=-50.0,
+                partner_name="Tesco",
+                description="",
+                date="2024-01-01",
+                category="Groceries",
+            ),
+            Transaction(
+                amount=-30.0,
+                partner_name="Aldi",
+                description="",
+                date="2024-01-02",
+                category="Groceries",
+            ),
         ]
         summary = categorizer.get_summary(transactions)
 
@@ -373,9 +389,27 @@ class TestExpenseCategorizer_Summary:
     def test_get_summary_multiple_categories(self, categorizer):
         """Test get_summary with transactions across multiple categories."""
         transactions = [
-            Transaction(50.0, "Tesco", "", "2024-01-01", "Groceries"),
-            Transaction(15.0, "Netflix", "", "2024-01-02", "Entertainment"),
-            Transaction(30.0, "Aldi", "", "2024-01-03", "Groceries"),
+            Transaction(
+                amount=-50.0,
+                partner_name="Tesco",
+                description="",
+                date="2024-01-01",
+                category="Groceries",
+            ),
+            Transaction(
+                amount=-15.0,
+                partner_name="Netflix",
+                description="",
+                date="2024-01-02",
+                category="Entertainment",
+            ),
+            Transaction(
+                amount=-30.0,
+                partner_name="Aldi",
+                description="",
+                date="2024-01-03",
+                category="Groceries",
+            ),
         ]
         summary = categorizer.get_summary(transactions)
 
@@ -384,8 +418,20 @@ class TestExpenseCategorizer_Summary:
     def test_get_summary_includes_uncategorized(self, categorizer):
         """Test get_summary includes uncategorized transactions."""
         transactions = [
-            Transaction(50.0, "Tesco", "", "2024-01-01", "Groceries"),
-            Transaction(25.0, "Unknown", "", "2024-01-02", "Uncategorized"),
+            Transaction(
+                amount=-50.0,
+                partner_name="Tesco",
+                description="",
+                date="2024-01-01",
+                category="Groceries",
+            ),
+            Transaction(
+                amount=-25.0,
+                partner_name="Unknown",
+                description="",
+                date="2024-01-02",
+                category="Uncategorized",
+            ),
         ]
         summary = categorizer.get_summary(transactions)
 
@@ -395,9 +441,27 @@ class TestExpenseCategorizer_Summary:
     def test_get_summary_sorts_by_amount_descending(self, categorizer):
         """Test that get_summary returns categories sorted by amount."""
         transactions = [
-            Transaction(10.0, "Tesco", "", "2024-01-01", "Groceries"),
-            Transaction(100.0, "Netflix", "", "2024-01-02", "Entertainment"),
-            Transaction(50.0, "Aldi", "", "2024-01-03", "Groceries"),
+            Transaction(
+                amount=-10.0,
+                partner_name="Tesco",
+                description="",
+                date="2024-01-01",
+                category="Groceries",
+            ),
+            Transaction(
+                amount=-100.0,
+                partner_name="Netflix",
+                description="",
+                date="2024-01-02",
+                category="Entertainment",
+            ),
+            Transaction(
+                amount=-50.0,
+                partner_name="Aldi",
+                description="",
+                date="2024-01-03",
+                category="Groceries",
+            ),
         ]
         summary = categorizer.get_summary(transactions)
         categories = list(summary.keys())
@@ -406,15 +470,27 @@ class TestExpenseCategorizer_Summary:
         assert categories == ["Entertainment", "Groceries"]
 
     def test_get_summary_with_negative_amounts(self, categorizer):
-        """Test get_summary with negative amounts (refunds)."""
+        """Test get_summary excludes positive amounts and sums negative ones."""
         transactions = [
-            Transaction(50.0, "Tesco", "", "2024-01-01", "Groceries"),
-            Transaction(-20.0, "Tesco", "", "2024-01-02", "Groceries"),
+            Transaction(
+                amount=50.0,
+                partner_name="Tesco",
+                description="",
+                date="2024-01-01",
+                category="Groceries",
+            ),
+            Transaction(
+                amount=-20.0,
+                partner_name="Tesco",
+                description="",
+                date="2024-01-02",
+                category="Groceries",
+            ),
         ]
         summary = categorizer.get_summary(transactions)
 
-        # Absolute values should be used
-        assert summary["Groceries"] == 70.0
+        # Only negative amounts (expenses) are included
+        assert summary["Groceries"] == 20.0
 
     def test_get_summary_empty_list(self, categorizer):
         """Test get_summary with empty transaction list."""
@@ -424,15 +500,23 @@ class TestExpenseCategorizer_Summary:
     @pytest.mark.parametrize(
         "amounts,expected_total",
         [
-            ([10.0, 20.0, 30.0], 60.0),
-            ([0.0, 0.0, 0.0], 0.0),
-            ([1.5, 2.5, 1.0], 5.0),
+            ([-10.0, -20.0, -30.0], 60.0),
+            ([0.0, 0.0, -1.0], 1.0),
+            ([-1.5, -2.5, -1.0], 5.0),
         ],
     )
-    def test_get_summary_calculates_totals_correctly(self, categorizer, amounts, expected_total):
+    def test_get_summary_calculates_totals_correctly(
+        self, categorizer, amounts, expected_total
+    ):
         """Test that get_summary calculates category totals correctly."""
         transactions = [
-            Transaction(amount, "Tesco", "", f"2024-01-{i:02d}", "Groceries")
+            Transaction(
+                amount=amount,
+                partner_name="Tesco",
+                description="",
+                date=f"2024-01-{i:02d}",
+                category="Groceries",
+            )
             for i, amount in enumerate(amounts, 1)
         ]
         summary = categorizer.get_summary(transactions)
@@ -461,10 +545,34 @@ class TestExpenseCategorizer_UncategorizedFiltering:
     def test_get_uncategorized_returns_uncategorized_only(self, categorizer):
         """Test that get_uncategorized returns only uncategorized transactions."""
         transactions = [
-            Transaction(50.0, "Tesco", "", "2024-01-01", "Groceries"),
-            Transaction(25.0, "Unknown", "", "2024-01-02", "Uncategorized"),
-            Transaction(15.0, "Netflix", "", "2024-01-03", "Entertainment"),
-            Transaction(10.0, "Unknown2", "", "2024-01-04", "Uncategorized"),
+            Transaction(
+                amount=50.0,
+                partner_name="Tesco",
+                description="",
+                date="2024-01-01",
+                category="Groceries",
+            ),
+            Transaction(
+                amount=25.0,
+                partner_name="Unknown",
+                description="",
+                date="2024-01-02",
+                category="Uncategorized",
+            ),
+            Transaction(
+                amount=15.0,
+                partner_name="Netflix",
+                description="",
+                date="2024-01-03",
+                category="Entertainment",
+            ),
+            Transaction(
+                amount=10.0,
+                partner_name="Unknown2",
+                description="",
+                date="2024-01-04",
+                category="Uncategorized",
+            ),
         ]
         uncategorized = categorizer.get_uncategorized(transactions)
 
@@ -476,8 +584,20 @@ class TestExpenseCategorizer_UncategorizedFiltering:
     def test_get_uncategorized_empty_list(self, categorizer):
         """Test get_uncategorized with no uncategorized transactions."""
         transactions = [
-            Transaction(50.0, "Tesco", "", "2024-01-01", "Groceries"),
-            Transaction(15.0, "Netflix", "", "2024-01-02", "Entertainment"),
+            Transaction(
+                amount=50.0,
+                partner_name="Tesco",
+                description="",
+                date="2024-01-01",
+                category="Groceries",
+            ),
+            Transaction(
+                amount=15.0,
+                partner_name="Netflix",
+                description="",
+                date="2024-01-02",
+                category="Entertainment",
+            ),
         ]
         uncategorized = categorizer.get_uncategorized(transactions)
 
@@ -486,8 +606,20 @@ class TestExpenseCategorizer_UncategorizedFiltering:
     def test_get_uncategorized_all_uncategorized(self, categorizer):
         """Test get_uncategorized when all transactions are uncategorized."""
         transactions = [
-            Transaction(25.0, "Unknown", "", "2024-01-01", "Uncategorized"),
-            Transaction(10.0, "Unknown2", "", "2024-01-02", "Uncategorized"),
+            Transaction(
+                amount=25.0,
+                partner_name="Unknown",
+                description="",
+                date="2024-01-01",
+                category="Uncategorized",
+            ),
+            Transaction(
+                amount=10.0,
+                partner_name="Unknown2",
+                description="",
+                date="2024-01-02",
+                category="Uncategorized",
+            ),
         ]
         uncategorized = categorizer.get_uncategorized(transactions)
 
@@ -497,11 +629,29 @@ class TestExpenseCategorizer_UncategorizedFiltering:
     def test_get_uncategorized_preserves_order(self, categorizer):
         """Test that get_uncategorized preserves transaction order."""
         transactions = [
-            Transaction(10.0, "Unknown1", "", "2024-01-01", "Uncategorized"),
-            Transaction(50.0, "Tesco", "", "2024-01-02", "Groceries"),
-            Transaction(20.0, "Unknown2", "", "2024-01-03", "Uncategorized"),
+            Transaction(
+                amount=10.0,
+                partner_name="Unknown1",
+                description="",
+                date="2024-01-01",
+                category="Uncategorized",
+            ),
+            Transaction(
+                amount=50.0,
+                partner_name="Tesco",
+                description="",
+                date="2024-01-02",
+                category="Groceries",
+            ),
+            Transaction(
+                amount=20.0,
+                partner_name="Unknown2",
+                description="",
+                date="2024-01-03",
+                category="Uncategorized",
+            ),
         ]
         uncategorized = categorizer.get_uncategorized(transactions)
 
-        assert uncategorized[0].date == "2024-01-01"
-        assert uncategorized[1].date == "2024-01-03"
+        assert uncategorized[0].date == date(2024, 1, 1)
+        assert uncategorized[1].date == date(2024, 1, 3)
