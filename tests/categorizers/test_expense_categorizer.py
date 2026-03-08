@@ -384,7 +384,7 @@ class TestExpenseCategorizer_Summary:
         ]
         summary = categorizer.get_summary(transactions)
 
-        assert summary == {"Groceries": 80.0}
+        assert summary == {"Groceries": 80.0, "Total": 80.0}
 
     def test_get_summary_multiple_categories(self, categorizer):
         """Test get_summary with transactions across multiple categories."""
@@ -413,7 +413,7 @@ class TestExpenseCategorizer_Summary:
         ]
         summary = categorizer.get_summary(transactions)
 
-        assert summary == {"Groceries": 80.0, "Entertainment": 15.0}
+        assert summary == {"Groceries": 80.0, "Entertainment": 15.0, "Total": 95.0}
 
     def test_get_summary_includes_uncategorized(self, categorizer):
         """Test get_summary includes uncategorized transactions."""
@@ -435,11 +435,10 @@ class TestExpenseCategorizer_Summary:
         ]
         summary = categorizer.get_summary(transactions)
 
-        assert "Uncategorized" in summary
-        assert summary["Uncategorized"] == 25.0
+        assert summary == {"Groceries": 50.0, "Uncategorized": 25.0, "Total": 75.0}
 
-    def test_get_summary_sorts_by_amount_descending(self, categorizer):
-        """Test that get_summary returns categories sorted by amount."""
+    def test_get_summary_ordered_by_config(self, categorizer):
+        """Test that get_summary returns categories ordered by config."""
         transactions = [
             Transaction(
                 amount=-10.0,
@@ -466,8 +465,8 @@ class TestExpenseCategorizer_Summary:
         summary = categorizer.get_summary(transactions)
         categories = list(summary.keys())
 
-        # Entertainment (100) should come before Groceries (60)
-        assert categories == ["Entertainment", "Groceries"]
+        # Categories ordered by config, then Total
+        assert categories == ["Groceries", "Entertainment", "Total"]
 
     def test_get_summary_with_negative_amounts(self, categorizer):
         """Test get_summary excludes positive amounts and sums negative ones."""
@@ -490,12 +489,12 @@ class TestExpenseCategorizer_Summary:
         summary = categorizer.get_summary(transactions)
 
         # Only negative amounts (expenses) are included
-        assert summary["Groceries"] == 20.0
+        assert summary == {"Groceries": 20.0, "Total": 20.0}
 
     def test_get_summary_empty_list(self, categorizer):
         """Test get_summary with empty transaction list."""
         summary = categorizer.get_summary([])
-        assert summary == {}
+        assert summary == {"Total": 0.0}
 
     @pytest.mark.parametrize(
         "amounts,expected_total",
@@ -521,7 +520,7 @@ class TestExpenseCategorizer_Summary:
         ]
         summary = categorizer.get_summary(transactions)
 
-        assert summary["Groceries"] == expected_total
+        assert summary == {"Groceries": expected_total, "Total": expected_total}
 
 
 class TestExpenseCategorizer_UncategorizedFiltering:

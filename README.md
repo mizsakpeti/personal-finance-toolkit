@@ -36,8 +36,8 @@ Automatically categorizes bank statement transactions using configurable keyword
 git clone https://github.com/yourusername/personal-finance-toolkit.git
 cd personal-finance-toolkit
 
-# Install dependencies
-uv sync
+# Install dependencies (with development extras)
+uv sync --extras "dev"
 ```
 
 ### Requirements

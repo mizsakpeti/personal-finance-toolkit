@@ -127,7 +127,7 @@ class ExpenseCategorizer:
             transactions: List of categorized transactions
 
         Returns:
-            Dict mapping categories to total amounts
+            Dict mapping categories to total amounts, ordered by config and including total
         """
         summary: dict[str, float] = {}
         for transaction in transactions:
@@ -136,7 +136,19 @@ class ExpenseCategorizer:
             category = transaction.category or "Uncategorized"
             summary[category] = summary.get(category, 0) + abs(transaction.amount)
 
-        return dict(sorted(summary.items(), key=lambda x: x[1], reverse=True))
+        # Order by config categories, then add uncategorized
+        ordered_summary: dict[str, float] = {}
+        for cat in self.config.categories.keys():
+            if cat in summary:
+                ordered_summary[cat] = summary[cat]
+        if "Uncategorized" in summary:
+            ordered_summary["Uncategorized"] = summary["Uncategorized"]
+
+        # Add total
+        total = sum(ordered_summary.values())
+        ordered_summary["Total"] = total
+
+        return ordered_summary
 
     def get_uncategorized(self, transactions: list[Transaction]) -> list[Transaction]:
         """Get list of uncategorized transactions.
