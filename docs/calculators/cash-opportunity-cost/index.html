@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Cost of Playing It Too Safe — Cash Opportunity Cost Calculator</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --blue: #2563eb;
+            --green: #16a34a;
+            --orange: #ea580c;
+            --text: #111827;
+            --muted: #6b7280;
+            --border: #e5e7eb;
+            --bg: #f9fafb;
+            --white: #ffffff;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: var(--text);
+            background: var(--bg);
+            line-height: 1.7;
+        }
+
+        /* ── Header ── */
+        header { background: var(--white); border-bottom: 1px solid var(--border); padding: 1rem 1.5rem; }
+        header nav { max-width: 800px; margin: 0 auto; display: flex; align-items: center; gap: 1.5rem; }
+        header .brand { font-weight: 700; font-size: 1rem; text-decoration: none; color: var(--text); margin-right: auto; }
+        header a { color: var(--muted); text-decoration: none; font-size: 0.9rem; }
+        header a:hover { color: var(--text); }
+
+        .container { max-width: 800px; margin: 0 auto; padding: 0 1.5rem; }
+
+        /* ── Article / Blog ── */
+        .article { background: var(--white); border-bottom: 1px solid var(--border); padding: 3.5rem 0 2.5rem; }
+        .article .meta { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--blue); margin-bottom: 0.75rem; }
+        .article h1 { font-size: 2.1rem; font-weight: 700; line-height: 1.2; margin-bottom: 0.6rem; }
+        .article .subtitle { color: var(--muted); font-size: 1.05rem; margin-bottom: 2.5rem; }
+        .article p { margin-bottom: 1.25rem; font-size: 1.03rem; }
+        .article blockquote {
+            border-left: 4px solid var(--blue);
+            padding: 0.85rem 1.25rem;
+            margin: 1.75rem 0;
+            background: #eff6ff;
+            border-radius: 0 8px 8px 0;
+            font-style: italic;
+            color: #1e40af;
+            font-size: 1.05rem;
+        }
+        .article .section-break {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 2rem 0;
+        }
+
+        /* ── Calculator ── */
+        .calculator { padding: 2.5rem 0; }
+        .calc-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 1.25rem; }
+
+        .presets { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 1.5rem; align-items: center; }
+        .presets-label { font-size: 0.8rem; color: var(--muted); font-weight: 500; }
+        .preset-btn {
+            padding: 0.35rem 0.85rem;
+            border: 1px solid var(--border);
+            background: var(--white);
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            color: var(--muted);
+            transition: all 0.15s;
+        }
+        .preset-btn:hover { border-color: var(--blue); color: var(--blue); background: #eff6ff; }
+        .preset-btn.active { border-color: var(--blue); color: var(--blue); background: #eff6ff; font-weight: 600; }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.85rem;
+            margin-bottom: 1.25rem;
+        }
+        @media (max-width: 580px) { .input-grid { grid-template-columns: 1fr; } }
+
+        .input-group {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.9rem 1.1rem;
+            transition: border-color 0.15s;
+        }
+        .input-group:focus-within { border-color: var(--blue); }
+        .input-group label {
+            display: block;
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--muted);
+            margin-bottom: 0.3rem;
+        }
+        .input-group .row { display: flex; align-items: baseline; gap: 0.4rem; }
+        .input-group input, .input-group select {
+            border: none;
+            outline: none;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text);
+            background: transparent;
+            width: 100%;
+            min-width: 0;
+        }
+        .input-group select { font-size: 1rem; cursor: pointer; }
+        .input-group .unit { font-size: 0.9rem; color: var(--muted); white-space: nowrap; flex-shrink: 0; }
+        .span-2 { grid-column: span 2; }
+        @media (max-width: 580px) { .span-2 { grid-column: span 1; } }
+
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+            font-size: 0.95rem;
+            cursor: pointer;
+            user-select: none;
+        }
+        .toggle { position: relative; display: inline-block; width: 42px; height: 22px; flex-shrink: 0; }
+        .toggle input { opacity: 0; width: 0; height: 0; }
+        .toggle-track {
+            position: absolute; inset: 0;
+            background: var(--border);
+            border-radius: 22px;
+            transition: background 0.2s;
+        }
+        .toggle-thumb {
+            position: absolute;
+            width: 16px; height: 16px;
+            left: 3px; top: 3px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.2s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        .toggle input:checked ~ .toggle-track { background: var(--blue); }
+        .toggle input:checked ~ .toggle-thumb { transform: translateX(20px); }
+
+        .calc-btn {
+            width: 100%;
+            padding: 0.85rem;
+            background: var(--blue);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s;
+            margin-bottom: 2rem;
+        }
+        .calc-btn:hover { background: #1d4ed8; }
+
+        /* ── Results ── */
+        .results { display: none; animation: fadeIn 0.25s ease; }
+        .results.visible { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+        .result-cards { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.85rem; margin-bottom: 1.25rem; }
+        @media (max-width: 580px) { .result-cards { grid-template-columns: 1fr; } }
+
+        .result-card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.1rem 1.25rem;
+        }
+        .result-card.highlight { border-color: #fed7aa; background: #fff7ed; }
+        .result-card .r-label { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 0.2rem; }
+        .result-card .r-value { font-size: 1.35rem; font-weight: 700; line-height: 1.2; }
+        .result-card.highlight .r-value { color: var(--orange); }
+        .result-card .r-sub { font-size: 0.78rem; color: var(--muted); margin-top: 0.25rem; }
+        .result-card .r-real { font-size: 0.82rem; color: var(--muted); margin-top: 0.35rem; border-top: 1px solid var(--border); padding-top: 0.35rem; }
+
+        .chart-wrap {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem 1.5rem 1rem;
+            margin-bottom: 0.5rem;
+        }
+        .chart-wrap h3 { font-size: 0.9rem; font-weight: 600; color: var(--muted); margin-bottom: 1.1rem; }
+
+        /* ── Post-calculator narrative ── */
+        .post-calc { padding: 2rem 0; }
+        .post-calc h2 { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.75rem; }
+        .post-calc p { margin-bottom: 1.1rem; font-size: 1.02rem; color: #374151; }
+        .post-calc ul { margin: 0 0 1.1rem 1.4rem; }
+        .post-calc li { font-size: 1.02rem; color: #374151; margin-bottom: 0.4rem; }
+        .insight-box {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 8px;
+            padding: 1.1rem 1.25rem;
+            margin: 1.5rem 0;
+            font-size: 0.95rem;
+            color: #14532d;
+        }
+        .insight-box strong { display: block; margin-bottom: 0.3rem; font-size: 1rem; }
+
+        /* ── How it works ── */
+        .how-it-works { background: var(--white); border-top: 1px solid var(--border); padding: 2.5rem 0; }
+        .how-it-works h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.75rem; }
+        .how-it-works p { font-size: 0.92rem; color: var(--muted); margin-bottom: 0.85rem; }
+        .formula-box {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 1rem 1.25rem;
+            font-family: 'SFMono-Regular', 'Consolas', monospace;
+            font-size: 0.82rem;
+            color: #374151;
+            line-height: 1.9;
+            margin: 0.85rem 0 1rem;
+        }
+        .disclaimer { font-size: 0.82rem; color: var(--muted); border-top: 1px solid var(--border); padding-top: 1rem; margin-top: 0.5rem; }
+
+        /* ── Footer ── */
+        footer { padding: 1.5rem; text-align: center; font-size: 0.82rem; color: var(--muted); border-top: 1px solid var(--border); }
+        footer a { color: var(--muted); }
+    </style>
+</head>
+<body>
+
+<header>
+    <nav>
+        <a href="../../index.html" class="brand">Personal Finance Toolkit</a>
+        <a href="../../index.html">All tools</a>
+        <a href="https://github.com/mizsakpeter/personal-finance-toolkit">GitHub</a>
+    </nav>
+</header>
+
+<!-- ── Opening narrative ── -->
+<div class="article">
+    <div class="container">
+        <div class="meta">Personal Finance · Calculator</div>
+        <h1>The Cost of Playing It Too Safe</h1>
+        <p class="subtitle">What sitting on cash is really costing you — and a calculator to make it concrete.</p>
+
+        <p>When I joined MSCI as a developer, one of the first conversations in onboarding stayed with me long after. A senior colleague was walking us through what MSCI actually does — equity indices, risk models, portfolio analytics — and somewhere in there he paused and said something like:</p>
+
+        <blockquote>"I genuinely hope nobody here has more than €1,500 sitting in a bank account that isn't earning a return. Because you all understand better than most what that's costing you."</blockquote>
+
+        <p>It landed. He wasn't being judgmental — he was making a point about financial literacy. People who work in finance live and breathe the concept that <em>idle capital has a cost</em>. Everyone else mostly doesn't think about it, or dismisses investing as "not their thing" or "too risky."</p>
+
+        <p>This is especially common in Hungary. Talking openly about money, savings, and investments is still somewhat taboo in many families. The default mental model is: <em>save up, put it in the bank, don't take risks</em>. That caution is understandable — it comes from lived experience. But there's a quiet cost to never questioning it, and most people never see it made explicit.</p>
+
+        <p>Here's the thing: keeping money in a savings account <em>feels</em> safe. And it is safe from loss — but it's not safe from erosion. Inflation eats your purchasing power year after year whether you notice or not. Meanwhile, Hungarian government bonds like PMÁP or Bónusz MÁP are also considered low-risk instruments, yet they consistently return several percentage points more than a standard deposit rate. The gap between "money in an account" and "money in a bond" isn't really about risk tolerance. It's mostly about inertia.</p>
+
+        <p>The calculator below makes that gap visible. A few percentage points of difference, compounded over ten or twenty years, becomes a very concrete number. The chart is the point — the diverging lines are a picture of a decision most people make passively, without ever realising it.</p>
+
+        <hr class="section-break">
+    </div>
+</div>
+
+<!-- ── Calculator ── -->
+<div class="calculator">
+    <div class="container">
+        <div class="calc-title">Calculate your opportunity cost</div>
+
+        <div class="presets">
+            <span class="presets-label">Load preset:</span>
+            <button class="preset-btn active" id="preset-hu" onclick="loadPreset('hu', this)">🇭🇺 Hungary 2025</button>
+            <button class="preset-btn" id="preset-eu" onclick="loadPreset('eu', this)">🇪🇺 Eurozone 2025</button>
+        </div>
+
+        <div class="input-grid">
+            <div class="input-group span-2">
+                <label>Starting Amount</label>
+                <div class="row">
+                    <select id="currency" oninput="recalculate()">
+                        <option value="Ft" selected>Ft HUF</option>
+                        <option value="€">€ EUR</option>
+                        <option value="$">$ USD</option>
+                        <option value="£">£ GBP</option>
+                        <option value="CHF">CHF</option>
+                    </select>
+                    <input type="number" id="amount" value="1000000" min="0" step="100000" oninput="recalculate()">
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Cash / Deposit Rate</label>
+                <div class="row">
+                    <input type="number" id="depositRate" value="3.5" min="0" max="50" step="0.1" oninput="recalculate()">
+                    <span class="unit">% / year</span>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Bond / Investment Rate</label>
+                <div class="row">
+                    <input type="number" id="bondRate" value="6.5" min="0" max="50" step="0.1" oninput="recalculate()">
+                    <span class="unit">% / year</span>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Inflation Rate</label>
+                <div class="row">
+                    <input type="number" id="inflationRate" value="4.5" min="0" max="50" step="0.1" oninput="recalculate()">
+                    <span class="unit">% / year</span>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Time Horizon</label>
+                <div class="row">
+                    <input type="number" id="years" value="10" min="1" max="50" step="1" oninput="recalculate()">
+                    <span class="unit">years</span>
+                </div>
+            </div>
+        </div>
+
+        <label class="toggle-row" for="realToggle">
+            <span class="toggle">
+                <input type="checkbox" id="realToggle" onchange="recalculate()">
+                <span class="toggle-track"></span>
+                <span class="toggle-thumb"></span>
+            </span>
+            Show values in today's purchasing power (inflation-adjusted)
+        </label>
+
+        <button class="calc-btn" onclick="calculate()">Calculate →</button>
+
+        <!-- Results -->
+        <div class="results" id="results">
+            <div class="result-cards">
+                <div class="result-card">
+                    <div class="r-label">Cash in bank</div>
+                    <div class="r-value" id="val-cash"></div>
+                    <div class="r-sub" id="sub-cash"></div>
+                    <div class="r-real" id="real-cash"></div>
+                </div>
+                <div class="result-card">
+                    <div class="r-label">Invested in bonds</div>
+                    <div class="r-value" id="val-invested"></div>
+                    <div class="r-sub" id="sub-invested"></div>
+                    <div class="r-real" id="real-invested"></div>
+                </div>
+                <div class="result-card highlight">
+                    <div class="r-label">Opportunity cost</div>
+                    <div class="r-value" id="val-cost"></div>
+                    <div class="r-sub" id="sub-cost"></div>
+                    <div class="r-real" id="real-cost"></div>
+                </div>
+            </div>
+
+            <div class="chart-wrap">
+                <h3 id="chart-title">Nominal value over time</h3>
+                <canvas id="chart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Post-calculator narrative ── -->
+<div class="post-calc">
+    <div class="container">
+        <h2>How to read this</h2>
+        <p>The gap between the two lines is money that exists in one scenario but not the other. It doesn't require taking on more risk — government bonds in Hungary are backed by the state, just like deposits up to the guarantee limit. The difference is almost entirely explained by the fact that bonds require a tiny bit more effort to buy.</p>
+
+        <p>Toggle on <em>"today's purchasing power"</em> and the picture gets starker. The cash line may actually curve <em>downward</em> over time — meaning your money buys less in the future than it does today, even with the deposit interest. This is the inflation effect made visible. A positive nominal return can be a negative real return.</p>
+
+        <div class="insight-box">
+            <strong>The key insight</strong>
+            A 3% deposit rate with 4.5% inflation is not a 3% gain. It's a −1.5% real loss per year. After 20 years, your purchasing power has shrunk — even though the number in your account is larger.
+        </div>
+
+        <h2>What to do with this</h2>
+        <p>This calculator isn't arguing for risk. It's arguing for <em>awareness</em>. A few practical steps that require very little financial sophistication:</p>
+        <ul>
+            <li><strong>Hungary:</strong> PMÁP and Bónusz MÁP are available directly through ÁKK (the Hungarian Government Debt Management Agency) or most major banks. They're denominated in HUF, state-backed, and in recent years have consistently beaten deposit rates.</li>
+            <li><strong>EU:</strong> Most banks now offer term deposit products with noticeably better rates than standard savings accounts. EU government bonds are accessible through most brokerage accounts.</li>
+            <li><strong>General:</strong> Even moving money from a 0% current account to a 2–3% savings account eliminates a large part of the passive loss shown here. The first step doesn't have to be complicated.</li>
+        </ul>
+
+        <p>The point isn't to become an investor overnight. It's just to stop making a costly passive decision by default.</p>
+    </div>
+</div>
+
+<!-- ── How it works ── -->
+<div class="how-it-works">
+    <div class="container">
+        <h2>How the calculation works</h2>
+        <p>Compound interest applied annually. The "real value" conversion uses the exact Fisher equation rather than the simplified approximation — this makes a meaningful difference at timeframes beyond 10 years.</p>
+        <div class="formula-box">
+FV_cash      = P × (1 + r_deposit)ⁿ
+FV_invested  = P × (1 + r_bond)ⁿ
+Opportunity cost (nominal) = FV_invested − FV_cash
+
+Real value (today's money) = FV ÷ (1 + r_inflation)ⁿ
+Real rate (Fisher)         = (1 + r_nominal) ÷ (1 + r_inflation) − 1
+Real opportunity cost      = (FV_invested − FV_cash) ÷ (1 + r_inflation)ⁿ
+        </div>
+        <p class="disclaimer">Preset rates are approximate figures based on publicly available data for early 2025: Hungarian PMÁP / Bónusz MÁP rates via ÁKK, KSH inflation forecasts, ECB deposit facility rates, and average EU government bond yields. Always verify current rates before making any financial decisions. This is not financial advice.</p>
+    </div>
+</div>
+
+<footer>
+    Part of <a href="../../index.html">Personal Finance Toolkit</a> ·
+    <a href="https://github.com/mizsakpeter/personal-finance-toolkit">GitHub</a> ·
+    Not financial advice.
+</footer>
+
+<script>
+const PRESETS = {
+    hu: { currency: 'Ft', amount: 1000000, depositRate: 3.5, bondRate: 6.5, inflationRate: 4.5, years: 10 },
+    eu: { currency: '€',  amount: 10000,   depositRate: 2.0, bondRate: 3.2, inflationRate: 2.3, years: 10 },
+};
+
+let chartInstance = null;
+let activePreset = 'hu';
+
+function loadPreset(key, btn) {
+    activePreset = key;
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const p = PRESETS[key];
+    document.getElementById('currency').value    = p.currency;
+    document.getElementById('amount').value      = p.amount;
+    document.getElementById('depositRate').value = p.depositRate;
+    document.getElementById('bondRate').value    = p.bondRate;
+    document.getElementById('inflationRate').value = p.inflationRate;
+    document.getElementById('years').value       = p.years;
+    calculate();
+}
+
+function recalculate() {
+    activePreset = null;
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+    if (document.getElementById('results').classList.contains('visible')) calculate();
+}
+
+function fmtFull(value, sym) {
+    const rounded = Math.round(value);
+    const formatted = Math.abs(rounded).toLocaleString('hu-HU');
+    return sym === 'Ft' ? formatted + ' Ft' : sym + ' ' + formatted;
+}
+
+function fmtShort(value, sym) {
+    const abs = Math.abs(value);
+    let s;
+    if (abs >= 1e9)      s = (value / 1e9).toFixed(1) + ' B';
+    else if (abs >= 1e6) s = (value / 1e6).toFixed(2) + ' M';
+    else if (abs >= 1e3) s = (value / 1e3).toFixed(1) + ' K';
+    else                 s = Math.round(value).toString();
+    return sym === 'Ft' ? s + ' Ft' : sym + ' ' + s;
+}
+
+function pct(rate) {
+    return (rate * 100).toFixed(1) + '%';
+}
+
+function calculate() {
+    const sym       = document.getElementById('currency').value;
+    const P         = parseFloat(document.getElementById('amount').value);
+    const rDep      = parseFloat(document.getElementById('depositRate').value) / 100;
+    const rBond     = parseFloat(document.getElementById('bondRate').value) / 100;
+    const rInfl     = parseFloat(document.getElementById('inflationRate').value) / 100;
+    const n         = parseInt(document.getElementById('years').value);
+    const showReal  = document.getElementById('realToggle').checked;
+
+    if ([P, rDep, rBond, rInfl, n].some(v => isNaN(v) || v < 0) || n < 1) return;
+
+    const pts = n + 1;
+    const cashNom     = Array.from({ length: pts }, (_, y) => P * Math.pow(1 + rDep,  y));
+    const investedNom = Array.from({ length: pts }, (_, y) => P * Math.pow(1 + rBond, y));
+    const deflator    = Array.from({ length: pts }, (_, y) => Math.pow(1 + rInfl, y));
+    const cashReal    = cashNom.map((v, y) => v / deflator[y]);
+    const investedReal= investedNom.map((v, y) => v / deflator[y]);
+    const startLine   = Array(pts).fill(P);
+
+    const fvCash     = cashNom[n];
+    const fvInvested = investedNom[n];
+    const pvCash     = cashReal[n];
+    const pvInvested = investedReal[n];
+
+    const nomCost  = fvInvested - fvCash;
+    const realCost = pvInvested - pvCash;
+
+    const realRateCash = Math.pow(1 + rDep,  1) / Math.pow(1 + rInfl, 1) - 1;
+    const realRateBond = Math.pow(1 + rBond, 1) / Math.pow(1 + rInfl, 1) - 1;
+
+    // ── Result cards ──
+    if (showReal) {
+        document.getElementById('val-cash').textContent     = fmtFull(pvCash, sym);
+        document.getElementById('sub-cash').textContent     = 'in today\'s purchasing power';
+        document.getElementById('real-cash').textContent    = 'Real rate: ' + pct(realRateCash) + '/yr  ·  nominal: ' + fmtFull(fvCash, sym);
+
+        document.getElementById('val-invested').textContent  = fmtFull(pvInvested, sym);
+        document.getElementById('sub-invested').textContent  = 'in today\'s purchasing power';
+        document.getElementById('real-invested').textContent = 'Real rate: ' + pct(realRateBond) + '/yr  ·  nominal: ' + fmtFull(fvInvested, sym);
+
+        document.getElementById('val-cost').textContent  = fmtFull(realCost, sym);
+        document.getElementById('sub-cost').textContent  = 'real opportunity cost over ' + n + ' years';
+        document.getElementById('real-cost').textContent = 'Nominal cost: ' + fmtFull(nomCost, sym);
+    } else {
+        document.getElementById('val-cash').textContent     = fmtFull(fvCash, sym);
+        document.getElementById('sub-cash').textContent     = 'nominal future value';
+        document.getElementById('real-cash').textContent    = 'Real value: ' + fmtFull(pvCash, sym) + '  ·  real rate: ' + pct(realRateCash) + '/yr';
+
+        document.getElementById('val-invested').textContent  = fmtFull(fvInvested, sym);
+        document.getElementById('sub-invested').textContent  = 'nominal future value';
+        document.getElementById('real-invested').textContent = 'Real value: ' + fmtFull(pvInvested, sym) + '  ·  real rate: ' + pct(realRateBond) + '/yr';
+
+        document.getElementById('val-cost').textContent  = fmtFull(nomCost, sym);
+        document.getElementById('sub-cost').textContent  = 'nominal opportunity cost over ' + n + ' years';
+        document.getElementById('real-cost').textContent = 'Real cost: ' + fmtFull(realCost, sym);
+    }
+
+    // ── Chart ──
+    const labels = Array.from({ length: pts }, (_, i) => 'Yr ' + i);
+
+    document.getElementById('chart-title').textContent = showReal
+        ? 'Value in today\'s purchasing power (inflation-adjusted)'
+        : 'Nominal value over time';
+
+    let datasets;
+    if (showReal) {
+        datasets = [
+            {
+                label: 'Starting amount',
+                data: startLine,
+                borderColor: '#d1d5db',
+                borderWidth: 1,
+                borderDash: [4, 4],
+                pointRadius: 0,
+                fill: false,
+                tension: 0,
+                order: 3,
+            },
+            {
+                label: 'Cash (real)',
+                data: cashReal,
+                borderColor: '#f97316',
+                backgroundColor: 'rgba(249,115,22,0.08)',
+                borderWidth: 2.5,
+                pointRadius: 0,
+                fill: false,
+                tension: 0.3,
+                order: 2,
+            },
+            {
+                label: 'Invested (real)',
+                data: investedReal,
+                borderColor: '#16a34a',
+                backgroundColor: 'rgba(22,163,74,0.10)',
+                borderWidth: 2.5,
+                pointRadius: 0,
+                fill: { target: 1, above: 'rgba(22,163,74,0.10)' },
+                tension: 0.3,
+                order: 1,
+            },
+        ];
+    } else {
+        datasets = [
+            {
+                label: 'Cash in bank',
+                data: cashNom,
+                borderColor: '#f97316',
+                backgroundColor: 'transparent',
+                borderWidth: 2.5,
+                pointRadius: 0,
+                fill: false,
+                tension: 0.3,
+            },
+            {
+                label: 'Invested in bonds',
+                data: investedNom,
+                borderColor: '#16a34a',
+                backgroundColor: 'rgba(22,163,74,0.10)',
+                borderWidth: 2.5,
+                pointRadius: 0,
+                fill: { target: 0, above: 'rgba(22,163,74,0.10)' },
+                tension: 0.3,
+            },
+        ];
+    }
+
+    if (chartInstance) chartInstance.destroy();
+    chartInstance = new Chart(document.getElementById('chart').getContext('2d'), {
+        type: 'line',
+        data: { labels, datasets },
+        options: {
+            responsive: true,
+            aspectRatio: 2.2,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: { position: 'top', labels: { boxWidth: 14, font: { size: 12 } } },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => '  ' + ctx.dataset.label + ': ' + fmtFull(ctx.parsed.y, sym),
+                    }
+                }
+            },
+            scales: {
+                x: { ticks: { maxTicksLimit: 10, font: { size: 11 } } },
+                y: {
+                    ticks: {
+                        font: { size: 11 },
+                        callback: v => fmtShort(v, sym),
+                    }
+                }
+            }
+        }
+    });
+
+    document.getElementById('results').classList.add('visible');
+}
+
+// Auto-load Hungary preset on page load
+window.addEventListener('load', () => calculate());
+</script>
+
+</body>
+</html>
