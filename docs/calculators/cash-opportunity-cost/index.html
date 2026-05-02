@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Cost of Playing It Too Safe — Cash Opportunity Cost Calculator</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+            onload="renderMathInElement(document.getElementById('math-formulas'),{delimiters:[{left:'$$',right:'$$',display:true}]})"></script>
     <style>
         :root {
             --blue: #2563eb;
@@ -214,13 +218,12 @@
             background: var(--bg);
             border: 1px solid var(--border);
             border-radius: 6px;
-            padding: 1rem 1.25rem;
-            font-family: 'SFMono-Regular', 'Consolas', monospace;
-            font-size: 0.82rem;
+            padding: 0.75rem 1.25rem;
             color: #374151;
-            line-height: 1.9;
             margin: 0.85rem 0 1rem;
+            overflow-x: auto;
         }
+        .formula-box .katex-display { margin: 0.6rem 0; }
         .disclaimer { font-size: 0.82rem; color: var(--muted); border-top: 1px solid var(--border); padding-top: 1rem; margin-top: 0.5rem; }
 
         /* ── Footer ── */
@@ -276,14 +279,18 @@
             <div class="input-group span-2">
                 <label>Starting Amount</label>
                 <div class="row">
-                    <select id="currency" oninput="recalculate()">
+                    <input type="text" id="amount" value="1 000 000" inputmode="numeric"
+                           style="flex:1;min-width:0;"
+                           onfocus="unformatAmount(this)"
+                           onblur="formatAmountDisplay(this); recalculate()"
+                           oninput="recalculate()">
+                    <select id="currency" oninput="recalculate()" style="width:auto;flex-shrink:0;">
                         <option value="Ft" selected>Ft HUF</option>
                         <option value="€">€ EUR</option>
                         <option value="$">$ USD</option>
                         <option value="£">£ GBP</option>
                         <option value="CHF">CHF</option>
                     </select>
-                    <input type="number" id="amount" value="1000000" min="0" step="100000" oninput="recalculate()">
                 </div>
             </div>
 
@@ -372,7 +379,7 @@
 
         <div class="insight-box">
             <strong>The key insight</strong>
-            A 3% deposit rate with 4.5% inflation is not a 3% gain. It's a −1.5% real loss per year. After 20 years, your purchasing power has shrunk — even though the number in your account is larger.
+            A 1% deposit rate with 4.5% inflation is not a 1% gain. It's a −3.3% real loss per year (Fisher equation). After 20 years, your purchasing power has shrunk significantly — even though the number in your account is larger.
         </div>
 
         <h2>What to do with this</h2>
@@ -392,14 +399,13 @@
     <div class="container">
         <h2>How the calculation works</h2>
         <p>Compound interest applied annually. The "real value" conversion uses the exact Fisher equation rather than the simplified approximation — this makes a meaningful difference at timeframes beyond 10 years.</p>
-        <div class="formula-box">
-FV_cash      = P × (1 + r_deposit)ⁿ
-FV_invested  = P × (1 + r_bond)ⁿ
-Opportunity cost (nominal) = FV_invested − FV_cash
-
-Real value (today's money) = FV ÷ (1 + r_inflation)ⁿ
-Real rate (Fisher)         = (1 + r_nominal) ÷ (1 + r_inflation) − 1
-Real opportunity cost      = (FV_invested − FV_cash) ÷ (1 + r_inflation)ⁿ
+        <div class="formula-box" id="math-formulas">
+            $$FV_{\text{cash}} = P \cdot (1 + r_{\text{deposit}})^n$$
+            $$FV_{\text{invested}} = P \cdot (1 + r_{\text{bond}})^n$$
+            $$\text{Opportunity cost} = FV_{\text{invested}} - FV_{\text{cash}}$$
+            $$\text{Real value} = \dfrac{FV}{(1 + r_{\text{inflation}})^n}$$
+            $$r_{\text{real}} = \dfrac{1 + r_{\text{nominal}}}{1 + r_{\text{inflation}}} - 1 \quad \text{(Fisher equation)}$$
+            $$\text{Real opportunity cost} = \dfrac{FV_{\text{invested}} - FV_{\text{cash}}}{(1 + r_{\text{inflation}})^n}$$
         </div>
         <p class="disclaimer">Preset rates are approximate figures based on publicly available data for early 2025: Hungarian PMÁP / Bónusz MÁP rates via ÁKK, KSH inflation forecasts, ECB deposit facility rates, and average EU government bond yields. Always verify current rates before making any financial decisions. This is not financial advice.</p>
     </div>
@@ -412,8 +418,19 @@ Real opportunity cost      = (FV_invested − FV_cash) ÷ (1 + r_inflation)ⁿ
 </footer>
 
 <script>
+function formatAmountDisplay(el) {
+    const raw = parseFloat(el.value.replace(/\s/g, '').replace(',', '.'));
+    if (!isNaN(raw) && raw >= 0) el.value = Math.round(raw).toLocaleString('hu-HU').replace(/,/g, ' ');
+}
+function unformatAmount(el) {
+    el.value = el.value.replace(/\s/g, '');
+}
+function getAmount() {
+    return parseFloat(document.getElementById('amount').value.replace(/\s/g, '').replace(',', '.'));
+}
+
 const PRESETS = {
-    hu: { currency: 'Ft', amount: 1000000, depositRate: 3.5, bondRate: 6.5, inflationRate: 4.5, years: 10 },
+    hu: { currency: 'Ft', amount: 1000000, depositRate: 1.0, bondRate: 6.5, inflationRate: 4.5, years: 10 },
     eu: { currency: '€',  amount: 10000,   depositRate: 2.0, bondRate: 3.2, inflationRate: 2.3, years: 10 },
 };
 
@@ -426,7 +443,7 @@ function loadPreset(key, btn) {
     btn.classList.add('active');
     const p = PRESETS[key];
     document.getElementById('currency').value    = p.currency;
-    document.getElementById('amount').value      = p.amount;
+    document.getElementById('amount').value      = Math.round(p.amount).toLocaleString('hu-HU').replace(/,/g, ' ');
     document.getElementById('depositRate').value = p.depositRate;
     document.getElementById('bondRate').value    = p.bondRate;
     document.getElementById('inflationRate').value = p.inflationRate;
@@ -462,7 +479,7 @@ function pct(rate) {
 
 function calculate() {
     const sym       = document.getElementById('currency').value;
-    const P         = parseFloat(document.getElementById('amount').value);
+    const P         = getAmount();
     const rDep      = parseFloat(document.getElementById('depositRate').value) / 100;
     const rBond     = parseFloat(document.getElementById('bondRate').value) / 100;
     const rInfl     = parseFloat(document.getElementById('inflationRate').value) / 100;
