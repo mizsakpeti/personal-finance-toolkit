@@ -295,9 +295,9 @@
             </div>
 
             <div class="input-group">
-                <label>Cash / Deposit Rate</label>
+                <label>Bank account rate</label>
                 <div class="row">
-                    <input type="number" id="depositRate" value="3.5" min="0" max="50" step="0.1" oninput="recalculate()">
+                    <input type="number" id="depositRate" value="1.0" min="0" max="50" step="0.1" oninput="recalculate()">
                     <span class="unit">% / year</span>
                 </div>
             </div>
@@ -385,7 +385,7 @@
         <h2>What to do with this</h2>
         <p>This calculator isn't arguing for risk. It's arguing for <em>awareness</em>. A few practical steps that require very little financial sophistication:</p>
         <ul>
-            <li><strong>Hungary:</strong> PMÁP and Bónusz MÁP are available directly through ÁKK (the Hungarian Government Debt Management Agency) or most major banks. They're denominated in HUF, state-backed, and in recent years have consistently beaten deposit rates.</li>
+            <li><strong>Hungary:</strong> <a href="https://www.allampapir.hu" target="_blank" rel="noopener">Magyar Állampapír</a> products — particularly <strong>FIXMÁP</strong> (fixed rate) and <strong>MÁP+</strong> — are available directly through Államkincstár or most major banks. They're HUF-denominated, state-backed, and consistently return several percentage points more than a standard bank account.</li>
             <li><strong>EU:</strong> Most banks now offer term deposit products with noticeably better rates than standard savings accounts. EU government bonds are accessible through most brokerage accounts.</li>
             <li><strong>General:</strong> Even moving money from a 0% current account to a 2–3% savings account eliminates a large part of the passive loss shown here. The first step doesn't have to be complicated.</li>
         </ul>
@@ -407,7 +407,7 @@
             $$r_{\text{real}} = \dfrac{1 + r_{\text{nominal}}}{1 + r_{\text{inflation}}} - 1 \quad \text{(Fisher equation)}$$
             $$\text{Real opportunity cost} = \dfrac{FV_{\text{invested}} - FV_{\text{cash}}}{(1 + r_{\text{inflation}})^n}$$
         </div>
-        <p class="disclaimer">Preset rates are approximate figures based on publicly available data for early 2025: Hungarian PMÁP / Bónusz MÁP rates via ÁKK, KSH inflation forecasts, ECB deposit facility rates, and average EU government bond yields. Always verify current rates before making any financial decisions. This is not financial advice.</p>
+        <p class="disclaimer">Preset rates are approximate figures for 2025. Hungarian bond rate based on <a href="https://www.allampapir.hu" target="_blank" rel="noopener">FIXMÁP and MÁP+</a> products via Államkincstár; bank account rates from major Hungarian banks (OTP, K&amp;H, Erste); KSH inflation forecast. EU figures based on average eurozone savings account rates and government bond yields; ECB inflation target. Note: EU savings account rates are similar to Hungarian ones despite ECB hikes — Hungarian banks have kept deposit rates low relative to the MNB base rate. Always verify current rates before making financial decisions. Not financial advice.</p>
     </div>
 </div>
 
@@ -431,7 +431,7 @@ function getAmount() {
 
 const PRESETS = {
     hu: { currency: 'Ft', amount: 1000000, depositRate: 1.0, bondRate: 6.5, inflationRate: 4.5, years: 10 },
-    eu: { currency: '€',  amount: 10000,   depositRate: 2.0, bondRate: 3.2, inflationRate: 2.3, years: 10 },
+    eu: { currency: '€',  amount: 10000,   depositRate: 1.0, bondRate: 3.0, inflationRate: 2.3, years: 10 },
 };
 
 let chartInstance = null;
