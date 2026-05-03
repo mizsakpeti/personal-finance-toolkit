@@ -226,6 +226,20 @@
         .formula-box .katex-display { margin: 0.6rem 0; }
         .disclaimer { font-size: 0.82rem; color: var(--muted); border-top: 1px solid var(--border); padding-top: 1rem; margin-top: 0.5rem; }
 
+        /* ── TL;DR ── */
+        .tldr {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 1.1rem 1.25rem;
+            margin: 0 0 2rem;
+        }
+        .tldr .tldr-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--blue); margin-bottom: 0.55rem; }
+        .tldr ul { margin: 0 0 0.75rem 1.2rem; }
+        .tldr li { font-size: 0.95rem; color: #1e3a5f; margin-bottom: 0.35rem; line-height: 1.5; }
+        .tldr a { font-size: 0.88rem; font-weight: 600; color: var(--blue); text-decoration: none; }
+        .tldr a:hover { text-decoration: underline; }
+
         /* ── Footer ── */
         footer { padding: 1.5rem; text-align: center; font-size: 0.82rem; color: var(--muted); border-top: 1px solid var(--border); }
         footer a { color: var(--muted); }
@@ -245,27 +259,41 @@
 <div class="article">
     <div class="container">
         <div class="meta">Personal Finance · Calculator</div>
-        <h1>The Cost of Playing It Too Safe</h1>
-        <p class="subtitle">What sitting on cash is really costing you — and a calculator to make it concrete.</p>
+        <h1>The Hidden Cost of Saving</h1>
+        <p class="subtitle">Every time you hold money to spend later, there's a cost. Most people never see it — here's a calculator to make it concrete.</p>
+
+        <div class="tldr">
+            <div class="tldr-label">TL;DR</div>
+            <ul>
+                <li>You are never truly at financial zero — you either have savings or debt. Holding money is always a decision, and that decision always has a cost.</li>
+                <li>Keeping cash in a standard bank account means inflation erodes its value, and you give up the return a safe investment could earn.</li>
+                <li>In Hungary, state bonds (FIXMÁP, MÁP+) are nearly as safe as a bank deposit — but return several times more.</li>
+            </ul>
+            <a href="#calculator">↓ Jump to the calculator</a>
+        </div>
 
         <p>When I joined MSCI as a developer, one of the first conversations in onboarding stayed with me long after. A senior colleague was walking us through what MSCI actually does — equity indices, risk models, portfolio analytics — and somewhere in there he paused and said something like:</p>
 
         <blockquote>"I genuinely hope nobody here has more than €1,500 sitting in a bank account that isn't earning a return. Because you all understand better than most what that's costing you."</blockquote>
 
-        <p>It landed. He wasn't being judgmental — he was making a point about financial literacy. People who work in finance live and breathe the concept that <em>idle capital has a cost</em>. Everyone else mostly doesn't think about it, or dismisses investing as "not their thing" or "too risky."</p>
+        <p>It landed. But there's a concept underneath that remark worth making explicit — one that rarely gets said out loud.</p>
+
+        <p>Think about your relationship with money at any given moment. You are almost never at true zero. You either have some savings, or you have some debt, or both. And since your salary arrives as money rather than groceries or rent, you always have a window — however short — between receiving it and spending it. That window is saving. Choosing to spend <em>later</em> rather than now.</p>
+
+        <p>What most people don't realise is that this deferral has a cost. Every day your money sits in a current account waiting to be spent, you're paying for that delay invisibly. Inflation erodes what it can buy. And by parking it in a bank account rather than a slightly smarter instrument, you're also giving up the return you could be earning in the meantime. The cost is real — it's just quiet enough that most people never notice it.</p>
 
         <p>This is especially common in Hungary. Talking openly about money, savings, and investments is still somewhat taboo in many families. The default mental model is: <em>save up, put it in the bank, don't take risks</em>. That caution is understandable — it comes from lived experience. But there's a quiet cost to never questioning it, and most people never see it made explicit.</p>
 
-        <p>Here's the thing: keeping money in a savings account <em>feels</em> safe. And it is safe from loss — but it's not safe from erosion. Inflation eats your purchasing power year after year whether you notice or not. Meanwhile, Hungarian government bonds like PMÁP or Bónusz MÁP are also considered low-risk instruments, yet they consistently return several percentage points more than a standard deposit rate. The gap between "money in an account" and "money in a bond" isn't really about risk tolerance. It's mostly about inertia.</p>
+        <p>The good news: this isn't about taking risk. Hungarian government bonds like FIXMÁP and MÁP+ are also state-backed instruments, yet they consistently return several percentage points more than a standard bank account. The gap isn't about risk tolerance — it's about inertia.</p>
 
-        <p>The calculator below makes that gap visible. A few percentage points of difference, compounded over ten or twenty years, becomes a very concrete number. The chart is the point — the diverging lines are a picture of a decision most people make passively, without ever realising it.</p>
+        <p>The calculator below makes that gap visible. A few percentage points of difference, compounded over ten or twenty years, becomes a very concrete number.</p>
 
         <hr class="section-break">
     </div>
 </div>
 
 <!-- ── Calculator ── -->
-<div class="calculator">
+<div class="calculator" id="calculator">
     <div class="container">
         <div class="calc-title">Calculate your opportunity cost</div>
 
