@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Cost of Playing It Too Safe — Cash Opportunity Cost Calculator</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+            onload="renderMathInElement(document.getElementById('math-formulas'),{delimiters:[{left:'$$',right:'$$',display:true}]})"></script>
+    <style>
+        :root {
+            --blue: #2563eb;
+            --green: #16a34a;
+            --orange: #ea580c;
+            --text: #111827;
+            --muted: #6b7280;
+            --border: #e5e7eb;
+            --bg: #f9fafb;
+            --white: #ffffff;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: var(--text);
+            background: var(--bg);
+            line-height: 1.7;
+        }
+
+        /* ── Header ── */
+        header { background: var(--white); border-bottom: 1px solid var(--border); padding: 1rem 1.5rem; }
+        header nav { max-width: 800px; margin: 0 auto; display: flex; align-items: center; gap: 1.5rem; }
+        header .brand { font-weight: 700; font-size: 1rem; text-decoration: none; color: var(--text); margin-right: auto; }
+        header a { color: var(--muted); text-decoration: none; font-size: 0.9rem; }
+        header a:hover { color: var(--text); }
+
+        .container { max-width: 800px; margin: 0 auto; padding: 0 1.5rem; }
+
+        /* ── Article / Blog ── */
+        .article { background: var(--white); border-bottom: 1px solid var(--border); padding: 3.5rem 0 2.5rem; }
+        .article .meta { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--blue); margin-bottom: 0.75rem; }
+        .article h1 { font-size: 2.1rem; font-weight: 700; line-height: 1.2; margin-bottom: 0.6rem; }
+        .article .subtitle { color: var(--muted); font-size: 1.05rem; margin-bottom: 2.5rem; }
+        .article p { margin-bottom: 1.25rem; font-size: 1.03rem; }
+        .article blockquote {
+            border-left: 4px solid var(--blue);
+            padding: 0.85rem 1.25rem;
+            margin: 1.75rem 0;
+            background: #eff6ff;
+            border-radius: 0 8px 8px 0;
+            font-style: italic;
+            color: #1e40af;
+            font-size: 1.05rem;
+        }
+        .article .section-break {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 2rem 0;
+        }
+
+        /* ── Calculator ── */
+        .calculator { padding: 2.5rem 0; }
+        .calc-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 1.25rem; }
+
+        .presets { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 1.5rem; align-items: center; }
+        .presets-label { font-size: 0.8rem; color: var(--muted); font-weight: 500; }
+        .preset-btn {
+            padding: 0.35rem 0.85rem;
+            border: 1px solid var(--border);
+            background: var(--white);
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            color: var(--muted);
+            transition: all 0.15s;
+        }
+        .preset-btn:hover { border-color: var(--blue); color: var(--blue); background: #eff6ff; }
+        .preset-btn.active { border-color: var(--blue); color: var(--blue); background: #eff6ff; font-weight: 600; }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.85rem;
+            margin-bottom: 1.25rem;
+        }
+        @media (max-width: 580px) { .input-grid { grid-template-columns: 1fr; } }
+
+        .input-group {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.9rem 1.1rem;
+            transition: border-color 0.15s;
+        }
+        .input-group:focus-within { border-color: var(--blue); }
+        .input-group label {
+            display: block;
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--muted);
+            margin-bottom: 0.3rem;
+        }
+        .input-group .row { display: flex; align-items: baseline; gap: 0.4rem; }
+        .input-group input, .input-group select {
+            border: none;
+            outline: none;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text);
+            background: transparent;
+            width: 100%;
+            min-width: 0;
+        }
+        .input-group select { font-size: 1rem; cursor: pointer; }
+        .input-group .unit { font-size: 0.9rem; color: var(--muted); white-space: nowrap; flex-shrink: 0; }
+        .span-2 { grid-column: span 2; }
+        @media (max-width: 580px) { .span-2 { grid-column: span 1; } }
+
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+            font-size: 0.95rem;
+            cursor: pointer;
+            user-select: none;
+        }
+        .toggle { position: relative; display: inline-block; width: 42px; height: 22px; flex-shrink: 0; }
+        .toggle input { opacity: 0; width: 0; height: 0; }
+        .toggle-track {
+            position: absolute; inset: 0;
+            background: var(--border);
+            border-radius: 22px;
+            transition: background 0.2s;
+        }
+        .toggle-thumb {
+            position: absolute;
+            width: 16px; height: 16px;
+            left: 3px; top: 3px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.2s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        .toggle input:checked ~ .toggle-track { background: var(--blue); }
+        .toggle input:checked ~ .toggle-thumb { transform: translateX(20px); }
+
+        .calc-btn {
+            width: 100%;
+            padding: 0.85rem;
+            background: var(--blue);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s;
+            margin-bottom: 2rem;
+        }
+        .calc-btn:hover { background: #1d4ed8; }
+
+        /* ── Results ── */
+        .results { display: none; animation: fadeIn 0.25s ease; }
+        .results.visible { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+        .result-cards { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.85rem; margin-bottom: 1.25rem; }
+        @media (max-width: 580px) { .result-cards { grid-template-columns: 1fr; } }
+
+        .result-card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.1rem 1.25rem;
+        }
+        .result-card.highlight { border-color: #fed7aa; background: #fff7ed; }
+        .result-card .r-label { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 0.2rem; }
+        .result-card .r-value { font-size: 1.35rem; font-weight: 700; line-height: 1.2; }
+        .result-card.highlight .r-value { color: var(--orange); }
+        .result-card .r-sub { font-size: 0.78rem; color: var(--muted); margin-top: 0.25rem; }
+        .result-card .r-real { font-size: 0.82rem; color: var(--muted); margin-top: 0.35rem; border-top: 1px solid var(--border); padding-top: 0.35rem; }
+
+        .chart-wrap {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem 1.5rem 1rem;
+            margin-bottom: 0.5rem;
+        }
+        .chart-wrap h3 { font-size: 0.9rem; font-weight: 600; color: var(--muted); margin-bottom: 1.1rem; }
+
+        /* ── Post-calculator narrative ── */
+        .post-calc { padding: 2rem 0; }
+        .post-calc h2 { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.75rem; }
+        .post-calc p { margin-bottom: 1.1rem; font-size: 1.02rem; color: #374151; }
+        .post-calc ul { margin: 0 0 1.1rem 1.4rem; }
+        .post-calc li { font-size: 1.02rem; color: #374151; margin-bottom: 0.4rem; }
+        .insight-box {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 8px;
+            padding: 1.1rem 1.25rem;
+            margin: 1.5rem 0;
+            font-size: 0.95rem;
+            color: #14532d;
+        }
+        .insight-box strong { display: block; margin-bottom: 0.3rem; font-size: 1rem; }
+
+        /* ── How it works ── */
+        .how-it-works { background: var(--white); border-top: 1px solid var(--border); padding: 2.5rem 0; }
+        .how-it-works h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.75rem; }
+        .how-it-works p { font-size: 0.92rem; color: var(--muted); margin-bottom: 0.85rem; }
+        .formula-box {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.75rem 1.25rem;
+            color: #374151;
+            margin: 0.85rem 0 1rem;
+            overflow-x: auto;
+        }
+        .formula-box .katex-display { margin: 0.6rem 0; }
+        .disclaimer { font-size: 0.82rem; color: var(--muted); border-top: 1px solid var(--border); padding-top: 1rem; margin-top: 0.5rem; }
+
+        /* ── Language switcher ── */
+        .lang-switch { display: flex; align-items: center; gap: 0.3rem; font-size: 0.85rem; margin-left: auto; }
+        .lang-switch a { color: var(--muted); text-decoration: none; padding: 0.2rem 0.4rem; border-radius: 4px; }
+        .lang-switch a:hover { color: var(--text); background: var(--bg); }
+        .lang-switch .current { font-weight: 700; color: var(--text); padding: 0.2rem 0.4rem; }
+        .lang-switch .sep { color: var(--border); }
+
+        /* ── TL;DR ── */
+        .tldr {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 1.1rem 1.25rem;
+            margin: 0 0 2rem;
+        }
+        .tldr .tldr-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--blue); margin-bottom: 0.55rem; }
+        .tldr ul { margin: 0 0 0.75rem 1.2rem; }
+        .tldr li { font-size: 0.95rem; color: #1e3a5f; margin-bottom: 0.35rem; line-height: 1.5; }
+        .tldr a { font-size: 0.88rem; font-weight: 600; color: var(--blue); text-decoration: none; }
+        .tldr a:hover { text-decoration: underline; }
+
+        /* ── Footer ── */
+        footer { padding: 1.5rem; text-align: center; font-size: 0.82rem; color: var(--muted); border-top: 1px solid var(--border); }
+        footer a { color: var(--muted); }
+    </style>
+</head>
+<body>
+
+<header>
+    <nav>
+        <a href="../../index.html" class="brand">Personal Finance Toolkit</a>
+        <a href="../../index.html">All tools</a>
+        <a href="https://github.com/mizsakpeter/personal-finance-toolkit">GitHub</a>
+        <div class="lang-switch">
+            <span class="current">EN</span>
+            <span class="sep">|</span>
+            <a href="hu/">HU</a>
+        </div>
+    </nav>
+</header>
+
+<!-- ── Opening narrative ── -->
+<div class="article">
+    <div class="container">
+        <div class="meta">Personal Finance · Calculator</div>
+        <h1>The Hidden Cost of Saving</h1>
+        <p class="subtitle">See what keeping too much money in a savings account is actually costing you over time.</p>
+
+        <div class="tldr">
+            <div class="tldr-label">TL;DR</div>
+            <ul>
+                <li>Saving costs money. Every day you hold cash, inflation silently erodes its value — and you miss what it could earn.</li>
+                <li>A standard bank account is often a real-terms loss, not safety: only keep what you need in the near future.</li>
+                <li>Hungarian state bonds carry the same low risk as a bank deposit, but return several times more.</li>
+            </ul>
+            <a href="#calculator">↓ Jump to the calculator</a>
+        </div>
+
+        <p>When I joined MSCI as a developer, one of the first conversations in onboarding stayed with me. A senior colleague was walking us through what MSCI actually does — equity indices, risk models, sustainability solutions — and somewhere in there he had a sentence like this:</p>
+
+        <blockquote>"I genuinely hope nobody here has more than €1,500 constantly sitting in a bank account that isn't earning a return. Because you all understand better than most what that's costing you."</blockquote>
+
+        <p>And another remark from that same conversation has stuck with me just as much:</p>
+
+        <blockquote>"You are constantly using the modern financial system and it costs you money."</blockquote>
+
+        <p>Think about it. You are almost never at true financial zero — you either have savings, or debt, or both. Debt has a visible cost in the form of interest you pay, but your saving is not that clear, since you even get some interest payments. And since your salary arrives as money rather than goods, there is always a window between receiving it and spending it. That window is saving: choosing to spend <em>later</em>. On any given day, the cost of that deferral is small — almost imperceptible. But if you're fortunate enough to consistently spend less than you earn, that idle balance grows month after month. And as it grows, so does the cost of keeping it in the wrong place. A few percentage points difference on a small sum barely registers. On years of accumulated savings, it compounds into a completely different story. That's the hidden cost of parking money in a low-yielding account my colleague referred to.</p>
+
+        <p>This is especially true in Hungary. Talking openly about personal finance is still uncommon — money conversations rarely happen around the family or office table, and there's no cultural tradition of passing this kind of knowledge down. The result isn't just a gap in awareness; it's an accumulation of misinformation. <em>"Investing is risky." "I don't have time to watch the markets." "I don't have enough money to invest."</em> These ideas are widespread, and for the low-risk instruments this article is about, they're mostly wrong.</p>
+
+        <p>Previous generations navigated a completely different economic reality, without the tools, products, or cultural framework that would have made these decisions obvious. What has changed is the <em>entry barrier</em>. Smartphone apps and online platforms have made it genuinely easy to open a bond account, track your savings, and find plain-language explanations written for ordinary people — not finance professionals. The tools are a few taps away. What still matters most is the conversation: one honest exchange with someone who has already thought about these questions can cut through more confusion than months of passive reading.</p>
+
+        <p>The chart below visualizes the opportunity cost of keeping money in a low-yielding bank account:</p>
+
+        <hr class="section-break">
+    </div>
+</div>
+
+<!-- ── Calculator ── -->
+<div class="calculator" id="calculator">
+    <div class="container">
+        <div class="calc-title">Calculate your opportunity cost</div>
+
+        <div class="presets">
+            <span class="presets-label">Load preset:</span>
+            <button class="preset-btn active" id="preset-hu" onclick="loadPreset('hu', this)">🇭🇺 Hungary 2025</button>
+            <button class="preset-btn" id="preset-eu" onclick="loadPreset('eu', this)">🇪🇺 Eurozone 2025</button>
+        </div>
+
+        <div class="input-grid">
+            <div class="input-group span-2">
+                <label>Starting Amount</label>
+                <div class="row">
+                    <input type="text" id="amount" value="5 000 000" inputmode="numeric"
+                           style="flex:1;min-width:0;"
+                           onfocus="unformatAmount(this)"
+                           onblur="formatAmountDisplay(this); recalculate()"
+                           oninput="recalculate()">
+                    <select id="currency" oninput="recalculate()" style="width:auto;flex-shrink:0;">
+                        <option value="Ft" selected>Ft HUF</option>
+                        <option value="€">€ EUR</option>
+                        <option value="$">$ USD</option>
+                        <option value="£">£ GBP</option>
+                        <option value="CHF">CHF</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Bank account rate</label>
+                <div class="row">
+                    <input type="number" id="depositRate" value="1.0" min="0" max="50" step="0.1" oninput="recalculate()">
+                    <span class="unit">% / year</span>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Bond / Investment Rate</label>
+                <div class="row">
+                    <input type="number" id="bondRate" value="6.5" min="0" max="50" step="0.1" oninput="recalculate()">
+                    <span class="unit">% / year</span>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Inflation Rate</label>
+                <div class="row">
+                    <input type="number" id="inflationRate" value="4.5" min="0" max="50" step="0.1" oninput="recalculate()">
+                    <span class="unit">% / year</span>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Time Horizon</label>
+                <div class="row">
+                    <input type="number" id="years" value="10" min="1" max="50" step="1" oninput="recalculate()">
+                    <span class="unit">years</span>
+                </div>
+            </div>
+        </div>
+
+        <label class="toggle-row" for="realToggle">
+            <span class="toggle">
+                <input type="checkbox" id="realToggle" onchange="recalculate()">
+                <span class="toggle-track"></span>
+                <span class="toggle-thumb"></span>
+            </span>
+            Show values in today's purchasing power (inflation-adjusted)
+        </label>
+
+        <button class="calc-btn" onclick="calculate()">Calculate →</button>
+
+        <!-- Results -->
+        <div class="results" id="results">
+            <div class="result-cards">
+                <div class="result-card">
+                    <div class="r-label">Cash in bank</div>
+                    <div class="r-value" id="val-cash"></div>
+                    <div class="r-sub" id="sub-cash"></div>
+                    <div class="r-real" id="real-cash"></div>
+                </div>
+                <div class="result-card">
+                    <div class="r-label">Invested in bonds</div>
+                    <div class="r-value" id="val-invested"></div>
+                    <div class="r-sub" id="sub-invested"></div>
+                    <div class="r-real" id="real-invested"></div>
+                </div>
+                <div class="result-card highlight">
+                    <div class="r-label">Opportunity cost</div>
+                    <div class="r-value" id="val-cost"></div>
+                    <div class="r-sub" id="sub-cost"></div>
+                    <div class="r-real" id="real-cost"></div>
+                </div>
+            </div>
+
+            <div class="chart-wrap">
+                <h3 id="chart-title">Nominal value over time</h3>
+                <canvas id="chart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Post-calculator narrative ── -->
+<div class="post-calc">
+    <div class="container">
+        <h2>How to read this</h2>
+        <p>The gap between the two lines is money you're losing by keeping it in a low-yielding bank account. It doesn't require taking on more risk — Hungarian government bonds are direct obligations of the state. The difference is almost entirely explained by the fact that bonds require a tiny bit more effort to buy.</p>
+
+        <p>Toggle on <em>"today's purchasing power"</em> and the picture gets starker. The cash line will actually curve <em>downward</em> over time — meaning your money buys less in the future than it does today, even with the deposit interest. This is the inflation effect made visible. A positive nominal return can be a negative real return.</p>
+
+        <div class="insight-box">
+            <strong>The key insight</strong>
+            A 1% deposit rate with 4.5% inflation is not a 1% gain. It's a -3.3% real loss per year (Fisher equation). After 20 years at this rate, your purchasing power is roughly halved — even though the number in your account is larger.
+        </div>
+
+        <h2>What to do with this</h2>
+        <p>Understanding the scale of the loss is step one. Acting on it takes an afternoon at most. Two good places to start:</p>
+        <ul>
+            <li><a href="https://kiszamolo.hu" target="_blank" rel="noopener">Kiszámoló</a> — a well-known Hungarian personal finance blog that explains money decisions in plain language, without jargon.</li>
+            <li><a href="https://allampapirkalkulator.hu" target="_blank" rel="noopener">Magyar Állampapír kalkulátor</a> — shows exactly what state bonds would earn on your specific amount, updated for current rates.</li>
+        </ul>
+
+        <p>This isn't about becoming an investor who watches stock prices. It's a small, one-time decision — moving idle savings to a better instrument — that takes an afternoon and pays off every year after. The effort is minimal; the long-term difference is not.</p>
+
+        <ul>
+            <li><strong>Hungary:</strong> FIXMÁP and MÁP+ are available at <a href="https://www.allampapir.hu" target="_blank" rel="noopener">allampapir.hu</a>. Buy directly — not through a bank, which adds fees.</li>
+            <li><strong>EU:</strong> Term deposits and short-term government bonds are accessible through most online brokerage accounts at noticeably better rates than a standard savings account.</li>
+        </ul>
+
+        <p>A note on risk: this calculator focuses on the safest, most liquid part of your savings — the emergency buffer most people carry, typically around 3-6 months of expenses. That money should stay accessible and not be exposed to market volatility. There are riskier instruments with higher expected returns worth exploring for longer-term savings — but that's a separate conversation. The point here is narrower: even your most conservative savings has a better home.</p>
+    </div>
+</div>
+
+<!-- ── How it works ── -->
+<div class="how-it-works">
+    <div class="container">
+        <h2>How the calculation works</h2>
+        <p>Compound interest applied annually. The "real value" conversion uses the exact Fisher equation rather than the simplified approximation — this makes a meaningful difference at timeframes beyond 10 years.</p>
+        <div class="formula-box" id="math-formulas">
+            $$FV_{\text{cash}} = P \cdot (1 + r_{\text{deposit}})^n$$
+            $$FV_{\text{invested}} = P \cdot (1 + r_{\text{bond}})^n$$
+            $$\text{Opportunity cost} = FV_{\text{invested}} - FV_{\text{cash}}$$
+            $$\text{Real value} = \dfrac{FV}{(1 + r_{\text{inflation}})^n}$$
+            $$r_{\text{real}} = \dfrac{1 + r_{\text{nominal}}}{1 + r_{\text{inflation}}} - 1 \quad \text{(Fisher equation)}$$
+            $$\text{Real opportunity cost} = \dfrac{FV_{\text{invested}} - FV_{\text{cash}}}{(1 + r_{\text{inflation}})^n}$$
+        </div>
+        <p class="disclaimer">Preset rates are approximate figures for 2025. Hungarian bond rate based on FIXMÁP and MÁP+ products via Államkincstár; bank account rates from major Hungarian banks (OTP, K&amp;H, Erste); KSH inflation forecast. EU figures based on average eurozone savings account rates and government bond yields; ECB inflation target. Always verify current rates before making financial decisions. Not financial advice.</p>
+    </div>
+</div>
+
+<footer>
+    Part of <a href="../../index.html">Personal Finance Toolkit</a> ·
+    <a href="https://github.com/mizsakpeter/personal-finance-toolkit">GitHub</a> ·
+    Not financial advice.
+</footer>
+
+<script>
+function formatAmountDisplay(el) {
+    const raw = parseFloat(el.value.replace(/\s/g, '').replace(',', '.'));
+    if (!isNaN(raw) && raw >= 0) el.value = Math.round(raw).toLocaleString('hu-HU').replace(/,/g, ' ');
+}
+function unformatAmount(el) {
+    el.value = el.value.replace(/\s/g, '');
+}
+function getAmount() {
+    return parseFloat(document.getElementById('amount').value.replace(/\s/g, '').replace(',', '.'));
+}
+
+const PRESETS = {
+    hu: { currency: 'Ft', amount: 1000000, depositRate: 1.0, bondRate: 6.5, inflationRate: 4.5, years: 10 },
+    eu: { currency: '€',  amount: 10000,   depositRate: 1.0, bondRate: 3.0, inflationRate: 2.3, years: 10 },
+};
+
+let chartInstance = null;
+let activePreset = 'hu';
+
+function loadPreset(key, btn) {
+    activePreset = key;
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const p = PRESETS[key];
+    document.getElementById('currency').value    = p.currency;
+    document.getElementById('amount').value      = Math.round(p.amount).toLocaleString('hu-HU').replace(/,/g, ' ');
+    document.getElementById('depositRate').value = p.depositRate;
+    document.getElementById('bondRate').value    = p.bondRate;
+    document.getElementById('inflationRate').value = p.inflationRate;
+    document.getElementById('years').value       = p.years;
+    calculate();
+}
+
+function recalculate() {
+    activePreset = null;
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+    if (document.getElementById('results').classList.contains('visible')) calculate();
+}
+
+function fmtFull(value, sym) {
+    const rounded = Math.round(value);
+    const formatted = Math.abs(rounded).toLocaleString('hu-HU');
+    return sym === 'Ft' ? formatted + ' Ft' : sym + ' ' + formatted;
+}
+
+function fmtShort(value, sym) {
+    const abs = Math.abs(value);
+    let s;
+    if (abs >= 1e9)      s = (value / 1e9).toFixed(1) + ' B';
+    else if (abs >= 1e6) s = (value / 1e6).toFixed(2) + ' M';
+    else if (abs >= 1e3) s = (value / 1e3).toFixed(1) + ' K';
+    else                 s = Math.round(value).toString();
+    return sym === 'Ft' ? s + ' Ft' : sym + ' ' + s;
+}
+
+function pct(rate) {
+    return (rate * 100).toFixed(1) + '%';
+}
+
+function calculate() {
+    const sym       = document.getElementById('currency').value;
+    const P         = getAmount();
+    const rDep      = parseFloat(document.getElementById('depositRate').value) / 100;
+    const rBond     = parseFloat(document.getElementById('bondRate').value) / 100;
+    const rInfl     = parseFloat(document.getElementById('inflationRate').value) / 100;
+    const n         = parseInt(document.getElementById('years').value);
+    const showReal  = document.getElementById('realToggle').checked;
+
+    if ([P, rDep, rBond, rInfl, n].some(v => isNaN(v) || v < 0) || n < 1) return;
+
+    const pts = n + 1;
+    const cashNom     = Array.from({ length: pts }, (_, y) => P * Math.pow(1 + rDep,  y));
+    const investedNom = Array.from({ length: pts }, (_, y) => P * Math.pow(1 + rBond, y));
+    const deflator    = Array.from({ length: pts }, (_, y) => Math.pow(1 + rInfl, y));
+    const cashReal    = cashNom.map((v, y) => v / deflator[y]);
+    const investedReal= investedNom.map((v, y) => v / deflator[y]);
+    const startLine   = Array(pts).fill(P);
+
+    const fvCash     = cashNom[n];
+    const fvInvested = investedNom[n];
+    const pvCash     = cashReal[n];
+    const pvInvested = investedReal[n];
+
+    const nomCost  = fvInvested - fvCash;
+    const realCost = pvInvested - pvCash;
+
+    const realRateCash = Math.pow(1 + rDep,  1) / Math.pow(1 + rInfl, 1) - 1;
+    const realRateBond = Math.pow(1 + rBond, 1) / Math.pow(1 + rInfl, 1) - 1;
+
+    // ── Result cards ──
+    if (showReal) {
+        document.getElementById('val-cash').textContent     = fmtFull(pvCash, sym);
+        document.getElementById('sub-cash').textContent     = 'in today\'s purchasing power';
+        document.getElementById('real-cash').textContent    = 'Real rate: ' + pct(realRateCash) + '/yr  ·  nominal: ' + fmtFull(fvCash, sym);
+
+        document.getElementById('val-invested').textContent  = fmtFull(pvInvested, sym);
+        document.getElementById('sub-invested').textContent  = 'in today\'s purchasing power';
+        document.getElementById('real-invested').textContent = 'Real rate: ' + pct(realRateBond) + '/yr  ·  nominal: ' + fmtFull(fvInvested, sym);
+
+        document.getElementById('val-cost').textContent  = fmtFull(realCost, sym);
+        document.getElementById('sub-cost').textContent  = 'real opportunity cost over ' + n + ' years';
+        document.getElementById('real-cost').textContent = 'Nominal cost: ' + fmtFull(nomCost, sym);
+    } else {
+        document.getElementById('val-cash').textContent     = fmtFull(fvCash, sym);
+        document.getElementById('sub-cash').textContent     = 'nominal future value';
+        document.getElementById('real-cash').textContent    = 'Real value: ' + fmtFull(pvCash, sym) + '  ·  real rate: ' + pct(realRateCash) + '/yr';
+
+        document.getElementById('val-invested').textContent  = fmtFull(fvInvested, sym);
+        document.getElementById('sub-invested').textContent  = 'nominal future value';
+        document.getElementById('real-invested').textContent = 'Real value: ' + fmtFull(pvInvested, sym) + '  ·  real rate: ' + pct(realRateBond) + '/yr';
+
+        document.getElementById('val-cost').textContent  = fmtFull(nomCost, sym);
+        document.getElementById('sub-cost').textContent  = 'nominal opportunity cost over ' + n + ' years';
+        document.getElementById('real-cost').textContent = 'Real cost: ' + fmtFull(realCost, sym);
+    }
+
+    // ── Chart ──
+    const labels = Array.from({ length: pts }, (_, i) => 'Yr ' + i);
+
+    document.getElementById('chart-title').textContent = showReal
+        ? 'Value in today\'s purchasing power (inflation-adjusted)'
+        : 'Nominal value over time';
+
+    let datasets;
+    if (showReal) {
+        datasets = [
+            {
+                label: 'Starting amount',
+                data: startLine,
+                borderColor: '#d1d5db',
+                borderWidth: 1,
+                borderDash: [4, 4],
+                pointRadius: 0,
+                fill: false,
+                tension: 0,
+                order: 3,
+            },
+            {
+                label: 'Cash (real)',
+                data: cashReal,
+                borderColor: '#f97316',
+                backgroundColor: 'rgba(249,115,22,0.08)',
+                borderWidth: 2.5,
+                pointRadius: 0,
+                fill: false,
+                tension: 0.3,
+                order: 2,
+            },
+            {
+                label: 'Invested (real)',
+                data: investedReal,
+                borderColor: '#16a34a',
+                backgroundColor: 'rgba(22,163,74,0.10)',
+                borderWidth: 2.5,
+                pointRadius: 0,
+                fill: { target: 1, above: 'rgba(22,163,74,0.10)' },
+                tension: 0.3,
+                order: 1,
+            },
+        ];
+    } else {
+        datasets = [
+            {
+                label: 'Cash in bank',
+                data: cashNom,
+                borderColor: '#f97316',
+                backgroundColor: 'transparent',
+                borderWidth: 2.5,
+                pointRadius: 0,
+                fill: false,
+                tension: 0.3,
+            },
+            {
+                label: 'Invested in bonds',
+                data: investedNom,
+                borderColor: '#16a34a',
+                backgroundColor: 'rgba(22,163,74,0.10)',
+                borderWidth: 2.5,
+                pointRadius: 0,
+                fill: { target: 0, above: 'rgba(22,163,74,0.10)' },
+                tension: 0.3,
+            },
+        ];
+    }
+
+    if (chartInstance) chartInstance.destroy();
+    chartInstance = new Chart(document.getElementById('chart').getContext('2d'), {
+        type: 'line',
+        data: { labels, datasets },
+        options: {
+            responsive: true,
+            aspectRatio: 2.2,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: { position: 'top', labels: { boxWidth: 14, font: { size: 12 } } },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => '  ' + ctx.dataset.label + ': ' + fmtFull(ctx.parsed.y, sym),
+                    }
+                }
+            },
+            scales: {
+                x: { ticks: { maxTicksLimit: 10, font: { size: 11 } } },
+                y: {
+                    ticks: {
+                        font: { size: 11 },
+                        callback: v => fmtShort(v, sym),
+                    }
+                }
+            }
+        }
+    });
+
+    document.getElementById('results').classList.add('visible');
+}
+
+// Auto-load Hungary preset on page load
+window.addEventListener('load', () => calculate());
+</script>
+
+</body>
+</html>

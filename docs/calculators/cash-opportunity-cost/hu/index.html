@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A kövér bankszámla rejtett költsége — Kalkulátor</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+            onload="renderMathInElement(document.getElementById('math-formulas'),{delimiters:[{left:'$$',right:'$$',display:true}]})"></script>
+    <style>
+        :root {
+            --blue: #2563eb;
+            --green: #16a34a;
+            --orange: #ea580c;
+            --text: #111827;
+            --muted: #6b7280;
+            --border: #e5e7eb;
+            --bg: #f9fafb;
+            --white: #ffffff;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: var(--text);
+            background: var(--bg);
+            line-height: 1.7;
+        }
+
+        header { background: var(--white); border-bottom: 1px solid var(--border); padding: 1rem 1.5rem; }
+        header nav { max-width: 800px; margin: 0 auto; display: flex; align-items: center; gap: 1.5rem; }
+        header .brand { font-weight: 700; font-size: 1rem; text-decoration: none; color: var(--text); }
+        header a { color: var(--muted); text-decoration: none; font-size: 0.9rem; }
+        header a:hover { color: var(--text); }
+        .lang-switch { display: flex; align-items: center; gap: 0.3rem; font-size: 0.85rem; margin-left: auto; }
+        .lang-switch a { color: var(--muted); text-decoration: none; padding: 0.2rem 0.4rem; border-radius: 4px; }
+        .lang-switch a:hover { color: var(--text); background: var(--bg); }
+        .lang-switch .current { font-weight: 700; color: var(--text); padding: 0.2rem 0.4rem; }
+        .lang-switch .sep { color: var(--border); }
+
+        .container { max-width: 800px; margin: 0 auto; padding: 0 1.5rem; }
+
+        .article { background: var(--white); border-bottom: 1px solid var(--border); padding: 3.5rem 0 2.5rem; }
+        .article .meta { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--blue); margin-bottom: 0.75rem; }
+        .article h1 { font-size: 2.1rem; font-weight: 700; line-height: 1.2; margin-bottom: 0.6rem; }
+        .article .subtitle { color: var(--muted); font-size: 1.05rem; margin-bottom: 2.5rem; }
+        .article p { margin-bottom: 1.25rem; font-size: 1.03rem; }
+        .article blockquote {
+            border-left: 4px solid var(--blue);
+            padding: 0.85rem 1.25rem;
+            margin: 1.75rem 0;
+            background: #eff6ff;
+            border-radius: 0 8px 8px 0;
+            font-style: italic;
+            color: #1e40af;
+            font-size: 1.05rem;
+        }
+        .article .section-break { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+
+        .tldr {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 1.1rem 1.25rem;
+            margin: 0 0 2rem;
+        }
+        .tldr .tldr-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--blue); margin-bottom: 0.55rem; }
+        .tldr ul { margin: 0 0 0.75rem 1.2rem; }
+        .tldr li { font-size: 0.95rem; color: #1e3a5f; margin-bottom: 0.35rem; line-height: 1.5; }
+        .tldr a { font-size: 0.88rem; font-weight: 600; color: var(--blue); text-decoration: none; }
+        .tldr a:hover { text-decoration: underline; }
+
+        .calculator { padding: 2.5rem 0; }
+        .calc-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 1.25rem; }
+
+        .presets { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 1.5rem; align-items: center; }
+        .presets-label { font-size: 0.8rem; color: var(--muted); font-weight: 500; }
+        .preset-btn {
+            padding: 0.35rem 0.85rem;
+            border: 1px solid var(--border);
+            background: var(--white);
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            color: var(--muted);
+            transition: all 0.15s;
+        }
+        .preset-btn:hover { border-color: var(--blue); color: var(--blue); background: #eff6ff; }
+        .preset-btn.active { border-color: var(--blue); color: var(--blue); background: #eff6ff; font-weight: 600; }
+
+        .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; margin-bottom: 1.25rem; }
+        @media (max-width: 580px) { .input-grid { grid-template-columns: 1fr; } }
+
+        .input-group {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.9rem 1.1rem;
+            transition: border-color 0.15s;
+        }
+        .input-group:focus-within { border-color: var(--blue); }
+        .input-group label {
+            display: block;
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--muted);
+            margin-bottom: 0.3rem;
+        }
+        .input-group .row { display: flex; align-items: baseline; gap: 0.4rem; }
+        .input-group input, .input-group select {
+            border: none; outline: none;
+            font-size: 1.25rem; font-weight: 600;
+            color: var(--text); background: transparent;
+            width: 100%; min-width: 0;
+        }
+        .input-group select { font-size: 1rem; cursor: pointer; }
+        .input-group .unit { font-size: 0.9rem; color: var(--muted); white-space: nowrap; flex-shrink: 0; }
+        .span-2 { grid-column: span 2; }
+        @media (max-width: 580px) { .span-2 { grid-column: span 1; } }
+
+        .toggle-row {
+            display: flex; align-items: center; gap: 0.75rem;
+            margin-bottom: 1.25rem; font-size: 0.95rem;
+            cursor: pointer; user-select: none;
+        }
+        .toggle { position: relative; display: inline-block; width: 42px; height: 22px; flex-shrink: 0; }
+        .toggle input { opacity: 0; width: 0; height: 0; }
+        .toggle-track { position: absolute; inset: 0; background: var(--border); border-radius: 22px; transition: background 0.2s; }
+        .toggle-thumb {
+            position: absolute; width: 16px; height: 16px;
+            left: 3px; top: 3px; background: white; border-radius: 50%;
+            transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        .toggle input:checked ~ .toggle-track { background: var(--blue); }
+        .toggle input:checked ~ .toggle-thumb { transform: translateX(20px); }
+
+        .calc-btn {
+            width: 100%; padding: 0.85rem;
+            background: var(--blue); color: white;
+            border: none; border-radius: 8px;
+            font-size: 1rem; font-weight: 600;
+            cursor: pointer; transition: background 0.15s;
+            margin-bottom: 2rem;
+        }
+        .calc-btn:hover { background: #1d4ed8; }
+
+        .results { display: none; animation: fadeIn 0.25s ease; }
+        .results.visible { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+        .result-cards { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.85rem; margin-bottom: 1.25rem; }
+        @media (max-width: 580px) { .result-cards { grid-template-columns: 1fr; } }
+
+        .result-card { background: var(--white); border: 1px solid var(--border); border-radius: 8px; padding: 1.1rem 1.25rem; }
+        .result-card.highlight { border-color: #fed7aa; background: #fff7ed; }
+        .result-card .r-label { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 0.2rem; }
+        .result-card .r-value { font-size: 1.35rem; font-weight: 700; line-height: 1.2; }
+        .result-card.highlight .r-value { color: var(--orange); }
+        .result-card .r-sub { font-size: 0.78rem; color: var(--muted); margin-top: 0.25rem; }
+        .result-card .r-real { font-size: 0.82rem; color: var(--muted); margin-top: 0.35rem; border-top: 1px solid var(--border); padding-top: 0.35rem; }
+
+        .chart-wrap { background: var(--white); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem 1.5rem 1rem; margin-bottom: 0.5rem; }
+        .chart-wrap h3 { font-size: 0.9rem; font-weight: 600; color: var(--muted); margin-bottom: 1.1rem; }
+
+        .post-calc { padding: 2rem 0; }
+        .post-calc h2 { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.75rem; }
+        .post-calc p { margin-bottom: 1.1rem; font-size: 1.02rem; color: #374151; }
+        .post-calc ul { margin: 0 0 1.1rem 1.4rem; }
+        .post-calc li { font-size: 1.02rem; color: #374151; margin-bottom: 0.4rem; }
+        .insight-box {
+            background: #f0fdf4; border: 1px solid #bbf7d0;
+            border-radius: 8px; padding: 1.1rem 1.25rem;
+            margin: 1.5rem 0; font-size: 0.95rem; color: #14532d;
+        }
+        .insight-box strong { display: block; margin-bottom: 0.3rem; font-size: 1rem; }
+
+        .how-it-works { background: var(--white); border-top: 1px solid var(--border); padding: 2.5rem 0; }
+        .how-it-works h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.75rem; }
+        .how-it-works p { font-size: 0.92rem; color: var(--muted); margin-bottom: 0.85rem; }
+        .formula-box {
+            background: var(--bg); border: 1px solid var(--border);
+            border-radius: 6px; padding: 0.75rem 1.25rem;
+            color: #374151; margin: 0.85rem 0 1rem; overflow-x: auto;
+        }
+        .formula-box .katex-display { margin: 0.6rem 0; }
+        .disclaimer { font-size: 0.82rem; color: var(--muted); border-top: 1px solid var(--border); padding-top: 1rem; margin-top: 0.5rem; }
+
+        footer { padding: 1.5rem; text-align: center; font-size: 0.82rem; color: var(--muted); border-top: 1px solid var(--border); }
+        footer a { color: var(--muted); }
+    </style>
+</head>
+<body>
+
+<header>
+    <nav>
+        <a href="../../../index.html" class="brand">Personal Finance Toolkit</a>
+        <a href="../../../index.html">Összes eszköz</a>
+        <a href="https://github.com/mizsakpeter/personal-finance-toolkit">GitHub</a>
+        <div class="lang-switch">
+            <a href="../">EN</a>
+            <span class="sep">|</span>
+            <span class="current">HU</span>
+        </div>
+    </nav>
+</header>
+
+<!-- ── Cikk ── -->
+<div class="article">
+    <div class="container">
+        <div class="meta">Személyes pénzügyek · Kalkulátor</div>
+        <h1>A bankszámlán parkoló pénz rejtett költsége</h1>
+        <p class="subtitle">Minden félretett forintnak megvan a maga rejtett ára — minden nap fizetünk azért, hogy később költhessük a fizetésünket. Ez a kalkulátor megmutatja, mennyit is fizetünk mindezért.</p>
+
+        <div class="tldr">
+            <div class="tldr-label">Röviden</div>
+            <ul>
+                <li>A megtakarításnak is van ára. Amíg a pénzed bankszámlán hever, az infláció csendben felőrli az értékét — miközben lemondasz arról a hozamról, amit máshol kereshetne.</li>
+                <li>Inflációval számolva a bankszámla sokszor nem biztonságot jelent, hanem lassú veszteséget — csak annyit tarts rajta, amennyire a közeljövőben szükséged lesz.</li>
+                <li>A magyar állampapírok hasonlóan biztonságosak, mint egy bankbetét — de jóval többet hoznak.</li>
+            </ul>
+            <a href="#calculator">↓ Ugrás a kalkulátorhoz</a>
+        </div>
+
+        <p>Amikor fejlesztőként az MSCI-hoz csatlakoztam, az egyik első tréningen hangzott el egy emlékezetes mondat, ami azóta is sokszor eszembe jut. Egy tapasztalt kolléga az MSCI profiljáról mesélt — tőzsdeindexek, kockázatmodellezés, portfólióelemzés —, és közben valami hasonlót mondott:</p>
+
+        <blockquote>„Őszintén remélem, hogy senki sem tart 500 000 Ft-nál több pénzt hosszú távon a bankszámláján."</blockquote>
+
+        <p>Először furcsának tűnt, mert pont fizetésnap után voltunk, de a provokatív kijelentés mély nyomot hagyott. Megértettem, hogy mire gondol. Ugyanabból a beszélgetésből egy másik megjegyzés is megragadt:</p>
+
+        <blockquote>„Folyamatosan, szinte észrevétlenül használjuk a modern pénzügyi rendszert — és mindez pénzbe is kerül."</blockquote>
+
+        <p>Ha belegondolsz, pénzügyi szempontból szinte soha nem vagy pontosan nullán — vagy van megtakarításod, vagy adósságod, esetleg mindkettő. Az adósság esetén a költség jól látható a kamat formájában. A megtakarítás esetén viszont ez kevésbé nyilvánvaló, hiszen te is kapsz kamatot — csak épp sokkal kevesebbet, mint amennyit lehetne. A fizetésed havi egy alkalommal, forintban érkezik, és jó esetben nem költöd el még aznap. A kettő között eltelt idő már egy megtakarítás: a döntés, hogy ma <em>nem</em> költöd el. Napi szinten ez szinte észrevehetetlen költséggel jár, de ha rendszeresen kevesebbet költesz, mint amennyit keresel, az összeg fokozatosan felhalmozódik. Ahogy nő, úgy nő a bankszámlán heverő pénz rejtett költsége — néhány százalékpont kis tőkénél szinte semmit sem számít, de egy komolyabb megtakarításon már egészen jelentős nagyságrendet jelent. Erről az elmaradt hozamról beszélt a kollégám.</p>
+
+        <p>Magyarországon kifejezetten keveseset beszélünk a pénzről — a családi vagy munkahelyi asztalnál ritkán kerül szóba, és nincs az a kulturális minta, ami a pénzügyi tudást generációk között továbbadja. Ennek eredménye nemcsak tudáshiány, hanem félreértések egész sora. <em>„A befektetés kockázatos." „Nincs időm figyelni a piacokat." „Nincs elég pénzem, hogy megérje."</em> Ezek a nézetek mélyen begyökereztek, és az itt említett, alacsony kockázatú eszközökre nézve nagyrészt egyszerűen tévesek.</p>
+
+        <p>Az előző generációk egészen más gazdasági körülmények között éltek, és nem álltak rendelkezésükre azok az eszközök, felületek, amelyek ma ezeket a döntéseket kézenfekvővé teszik. Ami igazán megváltozott, az a belépési küszöb. Okostelefonos appokkal ma már tényleg egyszerű állampapír-számlát nyitni, nyomon követni a megtakarításokat, és érthető cikkeket olvasni — olyanokat, amelyek nem feltételeznek komoly pénzügyi alapismeretet. De ami a legtöbbet ér, az nem egy app, hanem egy személyes kapcsolat: őszinte inspiratív beszélgetések olyanokkal, akiket szintén mozgat ez a téma.</p>
+
+        <p>Az alábbi diagram az alacsony hozamú bankszámlán heverő pénz elmaradt hozamát teszi láthatóvá:</p>
+
+        <hr class="section-break">
+    </div>
+</div>
+
+<!-- ── Kalkulátor ── -->
+<div class="calculator" id="calculator">
+    <div class="container">
+        <div class="calc-title">Számítsd ki a lehetséges hozamodat</div>
+
+        <div class="presets">
+            <span class="presets-label">Példák:</span>
+            <button class="preset-btn active" id="preset-hu" onclick="loadPreset('hu', this)">🇭🇺 Magyarország 2025</button>
+            <button class="preset-btn" id="preset-eu" onclick="loadPreset('eu', this)">🇪🇺 Eurozóna 2025</button>
+        </div>
+
+        <div class="input-grid">
+            <div class="input-group span-2">
+                <label>Induló összeg</label>
+                <div class="row">
+                    <input type="text" id="amount" value="5 000 000" inputmode="numeric"
+                           style="flex:1;min-width:0;"
+                           onfocus="unformatAmount(this)"
+                           onblur="formatAmountDisplay(this); recalculate()"
+                           oninput="recalculate()">
+                    <select id="currency" oninput="recalculate()" style="width:auto;flex-shrink:0;">
+                        <option value="Ft" selected>Ft HUF</option>
+                        <option value="€">€ EUR</option>
+                        <option value="$">$ USD</option>
+                        <option value="£">£ GBP</option>
+                        <option value="CHF">CHF</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Bankszámla kamatlába</label>
+                <div class="row">
+                    <input type="number" id="depositRate" value="1.0" min="0" max="50" step="0.1" oninput="recalculate()">
+                    <span class="unit">% / év</span>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Állampapír / befektetési hozam</label>
+                <div class="row">
+                    <input type="number" id="bondRate" value="6.5" min="0" max="50" step="0.1" oninput="recalculate()">
+                    <span class="unit">% / év</span>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Infláció</label>
+                <div class="row">
+                    <input type="number" id="inflationRate" value="4.5" min="0" max="50" step="0.1" oninput="recalculate()">
+                    <span class="unit">% / év</span>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Időtáv</label>
+                <div class="row">
+                    <input type="number" id="years" value="10" min="1" max="50" step="1" oninput="recalculate()">
+                    <span class="unit">év</span>
+                </div>
+            </div>
+        </div>
+
+        <label class="toggle-row" for="realToggle">
+            <span class="toggle">
+                <input type="checkbox" id="realToggle" onchange="recalculate()">
+                <span class="toggle-track"></span>
+                <span class="toggle-thumb"></span>
+            </span>
+            Értékek megjelenítése mai vásárlóerőn (inflációval korrigálva)
+        </label>
+
+        <button class="calc-btn" onclick="calculate()">Számítás →</button>
+
+        <div class="results" id="results">
+            <div class="result-cards">
+                <div class="result-card">
+                    <div class="r-label">Bankszámlán</div>
+                    <div class="r-value" id="val-cash"></div>
+                    <div class="r-sub" id="sub-cash"></div>
+                    <div class="r-real" id="real-cash"></div>
+                </div>
+                <div class="result-card">
+                    <div class="r-label">Állampapírban</div>
+                    <div class="r-value" id="val-invested"></div>
+                    <div class="r-sub" id="sub-invested"></div>
+                    <div class="r-real" id="real-invested"></div>
+                </div>
+                <div class="result-card highlight">
+                    <div class="r-label">Elmaradt hozam</div>
+                    <div class="r-value" id="val-cost"></div>
+                    <div class="r-sub" id="sub-cost"></div>
+                    <div class="r-real" id="real-cost"></div>
+                </div>
+            </div>
+
+            <div class="chart-wrap">
+                <h3 id="chart-title">Névleges érték az idő múlásával</h3>
+                <canvas id="chart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Eredmények magyarázata ── -->
+<div class="post-calc">
+    <div class="container">
+        <h2>Hogyan értelmezd ezt?</h2>
+        <p>A két görbe közötti különbségből látható, mennyivel több pénzed lenne az egyik esetben, mint a másikban. Ehhez nem kell nagyobb kockázatot vállalnod — a magyar állampapírok mögött közvetlenül az állam áll. A különbséget szinte kizárólag az magyarázza, hogy az állampapír megvásárlásához egy kicsivel több utánajárás kell.</p>
+
+        <p>Kapcsold be a <em>„mai vásárlóerőn"</em> nézetet, és a kép még lesújtóbb. A bankszámla görbéje akár le is kúszhat az évek alatt — ami azt jelenti, hogy a pénzed a jövőben kevesebbet fog érni, mint ma, pedig még banki kamatot is kaptál érte.</p>
+
+        <div class="insight-box">
+            <strong>A lényeg</strong>
+            Az 1%-os banki kamatláb 4,5%-os infláció mellett nem 1%-os nyereséget jelent — hanem valójában évi -3,3%-os veszteséget (Fisher-egyenlet). 20 év alatt a vásárlóerőd nagyjából felére apad, miközben a bankszámládon lévő szám még valamit növekedett is.
+        </div>
+
+        <h2>Mit tehetsz ezzel?</h2>
+        <p>A veszteség mértékét látni az első lépés. Lépni ellene alig tart tovább. Két jó kiindulópont:</p>
+        <ul>
+            <li><a href="https://kiszamolo.hu" target="_blank" rel="noopener">Kiszámoló</a> — népszerű magyar személyes pénzügyi blog, amely érthetően, szakzsargon nélkül magyarázza a pénzügyi döntéseket.</li>
+            <li><a href="https://allampapirkalkulator.hu" target="_blank" rel="noopener">Magyar Állampapír kalkulátor</a> — megmutatja, hogy az állampapírok pontosan mennyit hoznának a te konkrét összegeden, aktuális kamatlábakkal.</li>
+        </ul>
+
+        <p>Ez nem arról szól, hogy holnaptól befektetővé válj, aki naponta nézi az árfolyamokat. Egyetlen döntés kell: a bankban heverő megtakarításaid jobb helyre rakni. Egy délutánba telik, ami sokszorosan megtérülhet. A ráfordítás minimális — a hosszú távú különbség viszont nem az.</p>
+
+        <ul>
+            <li><strong>Magyarország:</strong> A FIXMÁP és MÁP+ közvetlenül az Államkincstárnál érhető el (<a href="https://www.allampapir.hu" target="_blank" rel="noopener">allampapir.hu</a>). Vásárold ott — ne bankon keresztül, ahol díjakat számítanak fel.</li>
+            <li><strong>EU:</strong> Lekötött betétek és rövid lejáratú állampapírok a legtöbb online bróker platformon elérhetők, lényegesen jobb hozammal, mint egy sima bankszámla.</li>
+        </ul>
+
+        <p>Egy megjegyzés a kockázatról: ez a kalkulátor a megtakarításaid legbiztonságosabb, leglikvidebb részére vonatkozik — arra a tartalékra, amelyet a legtöbben félretesznek, jellemzően 3-6 havi kiadásnak megfelelő összegben. Ennek bármikor elérhetőnek kell maradnia, nem szabad piaci ingadozásnak kitenni. Vannak kockázatosabb, de magasabb hozamú eszközök is, amelyek hosszú távú megtakarítások esetén szóba jöhetnek — de az már egy másik téma. A lényeg itt egyszerű: még a legbiztonságosabb megtakarításaidnak is jobb helye van, mint a bankszámládon.</p>
+    </div>
+</div>
+
+<!-- ── Módszertan ── -->
+<div class="how-it-works">
+    <div class="container">
+        <h2>A számítás módszertana</h2>
+        <p>Éves kamatfizetéssel számolva. A „reálérték" számításhoz az egzakt Fisher-egyenletet használjuk az egyszerűsített közelítés helyett — 10 évnél hosszabb időtávon ez érdemi különbséget jelent.</p>
+        <div class="formula-box" id="math-formulas">
+            $$FV_{\text{bankszámla}} = P \cdot (1 + r_{\text{betét}})^n$$
+            $$FV_{\text{állampapír}} = P \cdot (1 + r_{\text{kötvény}})^n$$
+            $$\text{Elmaradt hozam} = FV_{\text{állampapír}} - FV_{\text{bankszámla}}$$
+            $$\text{Reális érték} = \dfrac{FV}{(1 + r_{\text{infláció}})^n}$$
+            $$r_{\text{reális}} = \dfrac{1 + r_{\text{névleges}}}{1 + r_{\text{infláció}}} - 1 \quad \text{(Fisher-egyenlet)}$$
+            $$\text{Reális elmaradt hozam} = \dfrac{FV_{\text{állampapír}} - FV_{\text{bankszámla}}}{(1 + r_{\text{infláció}})^n}$$
+        </div>
+        <p class="disclaimer">Az előbeállított értékek 2025-re vonatkozó közelítő adatok. A magyar kötvényráta az Államkincstár FIXMÁP és MÁP+ ajánlatán alapul; a bankszámla-kamatlábak a nagyobb hazai bankok (OTP, K&amp;H, Erste) aktuális ajánlatain; az inflációs becslés a KSH adatain. Az EU-s adatok az eurózóna átlagos bankszámla-kamatlábain és állampapír-hozamokon alapulnak; az inflációs cél az EKB adatain. Megjegyzés: az EU-s bankszámla-kamatlábak az EKB-emelések ellenére sem különböznek sokat a magyarokétól — a bankok mindkét piacon keveset adnak át a betéteseknek az alapkamatból. Pénzügyi döntés előtt mindig ellenőrizd az aktuális kamatlábakat. Ez nem pénzügyi tanácsadás.</p>
+    </div>
+</div>
+
+<footer>
+    A <a href="../../../index.html">Personal Finance Toolkit</a> része ·
+    <a href="https://github.com/mizsakpeter/personal-finance-toolkit">GitHub</a> ·
+    Ez nem pénzügyi tanácsadás.
+</footer>
+
+<script>
+function formatAmountDisplay(el) {
+    const raw = parseFloat(el.value.replace(/\s/g, '').replace(',', '.'));
+    if (!isNaN(raw) && raw >= 0) el.value = Math.round(raw).toLocaleString('hu-HU').replace(/,/g, ' ');
+}
+function unformatAmount(el) {
+    el.value = el.value.replace(/\s/g, '');
+}
+function getAmount() {
+    return parseFloat(document.getElementById('amount').value.replace(/\s/g, '').replace(',', '.'));
+}
+
+const PRESETS = {
+    hu: { currency: 'Ft', amount: 1000000, depositRate: 1.0, bondRate: 6.5, inflationRate: 4.5, years: 10 },
+    eu: { currency: '€',  amount: 10000,   depositRate: 1.0, bondRate: 3.0, inflationRate: 2.3, years: 10 },
+};
+
+let chartInstance = null;
+
+function loadPreset(key, btn) {
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const p = PRESETS[key];
+    document.getElementById('currency').value       = p.currency;
+    document.getElementById('amount').value         = Math.round(p.amount).toLocaleString('hu-HU').replace(/,/g, ' ');
+    document.getElementById('depositRate').value    = p.depositRate;
+    document.getElementById('bondRate').value       = p.bondRate;
+    document.getElementById('inflationRate').value  = p.inflationRate;
+    document.getElementById('years').value          = p.years;
+    calculate();
+}
+
+function recalculate() {
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+    if (document.getElementById('results').classList.contains('visible')) calculate();
+}
+
+function fmtFull(value, sym) {
+    const rounded = Math.round(value);
+    const formatted = Math.abs(rounded).toLocaleString('hu-HU').replace(/,/g, ' ');
+    return sym === 'Ft' ? formatted + ' Ft' : sym + ' ' + formatted;
+}
+
+function fmtShort(value, sym) {
+    const abs = Math.abs(value);
+    let s;
+    if (abs >= 1e9)      s = (value / 1e9).toFixed(1) + ' Mrd';
+    else if (abs >= 1e6) s = (value / 1e6).toFixed(2) + ' M';
+    else if (abs >= 1e3) s = (value / 1e3).toFixed(1) + ' E';
+    else                 s = Math.round(value).toString();
+    return sym === 'Ft' ? s + ' Ft' : sym + ' ' + s;
+}
+
+function pct(rate) {
+    return (rate * 100).toFixed(1) + '%';
+}
+
+function calculate() {
+    const sym      = document.getElementById('currency').value;
+    const P        = getAmount();
+    const rDep     = parseFloat(document.getElementById('depositRate').value) / 100;
+    const rBond    = parseFloat(document.getElementById('bondRate').value) / 100;
+    const rInfl    = parseFloat(document.getElementById('inflationRate').value) / 100;
+    const n        = parseInt(document.getElementById('years').value);
+    const showReal = document.getElementById('realToggle').checked;
+
+    if ([P, rDep, rBond, rInfl, n].some(v => isNaN(v) || v < 0) || n < 1) return;
+
+    const pts          = n + 1;
+    const cashNom      = Array.from({ length: pts }, (_, y) => P * Math.pow(1 + rDep,  y));
+    const investedNom  = Array.from({ length: pts }, (_, y) => P * Math.pow(1 + rBond, y));
+    const deflator     = Array.from({ length: pts }, (_, y) => Math.pow(1 + rInfl, y));
+    const cashReal     = cashNom.map((v, y) => v / deflator[y]);
+    const investedReal = investedNom.map((v, y) => v / deflator[y]);
+    const startLine    = Array(pts).fill(P);
+
+    const fvCash     = cashNom[n];
+    const fvInvested = investedNom[n];
+    const pvCash     = cashReal[n];
+    const pvInvested = investedReal[n];
+    const nomCost    = fvInvested - fvCash;
+    const realCost   = pvInvested - pvCash;
+
+    const realRateCash = Math.pow(1 + rDep,  1) / Math.pow(1 + rInfl, 1) - 1;
+    const realRateBond = Math.pow(1 + rBond, 1) / Math.pow(1 + rInfl, 1) - 1;
+
+    if (showReal) {
+        document.getElementById('val-cash').textContent     = fmtFull(pvCash, sym);
+        document.getElementById('sub-cash').textContent     = 'mai vásárlóerőn';
+        document.getElementById('real-cash').textContent    = 'Reális kamatláb: ' + pct(realRateCash) + '/év  ·  névleges: ' + fmtFull(fvCash, sym);
+        document.getElementById('val-invested').textContent = fmtFull(pvInvested, sym);
+        document.getElementById('sub-invested').textContent = 'mai vásárlóerőn';
+        document.getElementById('real-invested').textContent= 'Reális kamatláb: ' + pct(realRateBond) + '/év  ·  névleges: ' + fmtFull(fvInvested, sym);
+        document.getElementById('val-cost').textContent     = fmtFull(realCost, sym);
+        document.getElementById('sub-cost').textContent     = 'reális elmaradt hozam ' + n + ' év alatt';
+        document.getElementById('real-cost').textContent    = 'Névleges elmaradt hozam: ' + fmtFull(nomCost, sym);
+    } else {
+        document.getElementById('val-cash').textContent     = fmtFull(fvCash, sym);
+        document.getElementById('sub-cash').textContent     = 'névleges jövőbeni érték';
+        document.getElementById('real-cash').textContent    = 'Reális érték: ' + fmtFull(pvCash, sym) + '  ·  reális kamatláb: ' + pct(realRateCash) + '/év';
+        document.getElementById('val-invested').textContent = fmtFull(fvInvested, sym);
+        document.getElementById('sub-invested').textContent = 'névleges jövőbeni érték';
+        document.getElementById('real-invested').textContent= 'Reális érték: ' + fmtFull(pvInvested, sym) + '  ·  reális kamatláb: ' + pct(realRateBond) + '/év';
+        document.getElementById('val-cost').textContent     = fmtFull(nomCost, sym);
+        document.getElementById('sub-cost').textContent     = 'névleges elmaradt hozam ' + n + ' év alatt';
+        document.getElementById('real-cost').textContent    = 'Reális elmaradt hozam: ' + fmtFull(realCost, sym);
+    }
+
+    const labels = Array.from({ length: pts }, (_, i) => i + '. év');
+    document.getElementById('chart-title').textContent = showReal
+        ? 'Mai vásárlóerőn (inflációval korrigálva)'
+        : 'Névleges érték az idő múlásával';
+
+    let datasets;
+    if (showReal) {
+        datasets = [
+            { label: 'Induló összeg', data: startLine, borderColor: '#d1d5db', borderWidth: 1, borderDash: [4,4], pointRadius: 0, fill: false, tension: 0, order: 3 },
+            { label: 'Bankszámlán (reális)', data: cashReal, borderColor: '#f97316', backgroundColor: 'rgba(249,115,22,0.08)', borderWidth: 2.5, pointRadius: 0, fill: false, tension: 0.3, order: 2 },
+            { label: 'Állampapírban (reális)', data: investedReal, borderColor: '#16a34a', backgroundColor: 'rgba(22,163,74,0.10)', borderWidth: 2.5, pointRadius: 0, fill: { target: 1, above: 'rgba(22,163,74,0.10)' }, tension: 0.3, order: 1 },
+        ];
+    } else {
+        datasets = [
+            { label: 'Bankszámlán', data: cashNom, borderColor: '#f97316', backgroundColor: 'transparent', borderWidth: 2.5, pointRadius: 0, fill: false, tension: 0.3 },
+            { label: 'Állampapírban', data: investedNom, borderColor: '#16a34a', backgroundColor: 'rgba(22,163,74,0.10)', borderWidth: 2.5, pointRadius: 0, fill: { target: 0, above: 'rgba(22,163,74,0.10)' }, tension: 0.3 },
+        ];
+    }
+
+    if (chartInstance) chartInstance.destroy();
+    chartInstance = new Chart(document.getElementById('chart').getContext('2d'), {
+        type: 'line',
+        data: { labels, datasets },
+        options: {
+            responsive: true,
+            aspectRatio: 2.2,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: { position: 'top', labels: { boxWidth: 14, font: { size: 12 } } },
+                tooltip: { callbacks: { label: ctx => '  ' + ctx.dataset.label + ': ' + fmtFull(ctx.parsed.y, sym) } }
+            },
+            scales: {
+                x: { ticks: { maxTicksLimit: 10, font: { size: 11 } } },
+                y: { ticks: { font: { size: 11 }, callback: v => fmtShort(v, sym) } }
+            }
+        }
+    });
+
+    document.getElementById('results').classList.add('visible');
+}
+
+window.addEventListener('load', () => calculate());
+</script>
+
+</body>
+</html>

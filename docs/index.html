@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Finance Toolkit</title>
+    <style>
+        :root {
+            --blue: #2563eb;
+            --text: #111827;
+            --muted: #6b7280;
+            --border: #e5e7eb;
+            --bg: #f9fafb;
+            --white: #ffffff;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: var(--text); background: var(--bg); line-height: 1.6; }
+
+        header { background: var(--white); border-bottom: 1px solid var(--border); padding: 1rem 1.5rem; }
+        header .inner { max-width: 800px; margin: 0 auto; display: flex; align-items: center; gap: 1.5rem; }
+        header .brand { font-weight: 700; font-size: 1rem; text-decoration: none; color: var(--text); }
+        header a { color: var(--muted); text-decoration: none; font-size: 0.9rem; }
+        header a:hover { color: var(--text); }
+
+        .hero { background: var(--white); padding: 4rem 1.5rem 3rem; border-bottom: 1px solid var(--border); }
+        .hero .inner { max-width: 800px; margin: 0 auto; }
+        .hero h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.75rem; }
+        .hero p { color: var(--muted); font-size: 1.05rem; max-width: 520px; }
+
+        .section { max-width: 800px; margin: 0 auto; padding: 2.5rem 1.5rem; }
+        .section h2 { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 1rem; }
+
+        .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        @media (max-width: 540px) { .card-grid { grid-template-columns: 1fr; } }
+
+        .card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.5rem;
+            text-decoration: none;
+            color: var(--text);
+            display: block;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        .card:hover { border-color: var(--blue); box-shadow: 0 2px 8px rgba(37,99,235,0.1); }
+        .card .tag {
+            display: inline-block;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            margin-bottom: 0.75rem;
+        }
+        .tag-web { background: #eff6ff; color: var(--blue); }
+        .tag-cli { background: #f0fdf4; color: #15803d; }
+        .card h3 { font-size: 1rem; font-weight: 600; margin-bottom: 0.35rem; }
+        .card p { font-size: 0.9rem; color: var(--muted); }
+        .card .arrow { display: inline-block; margin-top: 1rem; font-size: 0.875rem; color: var(--blue); font-weight: 500; }
+
+        footer { padding: 1.5rem; text-align: center; font-size: 0.85rem; color: var(--muted); border-top: 1px solid var(--border); }
+        footer a { color: var(--muted); }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="inner">
+        <a href="index.html" class="brand">Personal Finance Toolkit</a>
+        <a href="https://github.com/mizsakpeter/personal-finance-toolkit">GitHub</a>
+    </div>
+</header>
+
+<div class="hero">
+    <div class="inner">
+        <h1>Personal Finance Toolkit</h1>
+        <p>A collection of tools and calculators for making better, more informed personal finance decisions.</p>
+    </div>
+</div>
+
+<div class="section">
+    <h2>Web Calculators</h2>
+    <div class="card-grid">
+        <a href="calculators/cash-opportunity-cost/" class="card">
+            <span class="tag tag-web">Calculator</span>
+            <h3>The Hidden Cost of Saving</h3>
+            <p>See what keeping too much money in a savings account is actually costing you over time.</p>
+            <span class="arrow">Open calculator →</span>
+        </a>
+    </div>
+</div>
+
+<div class="section" style="padding-top: 0;">
+    <h2>CLI Tools</h2>
+    <div class="card-grid">
+        <a href="https://github.com/mizsakpeter/personal-finance-toolkit/blob/main/docs/expense_categorizer.md" class="card">
+            <span class="tag tag-cli">CLI</span>
+            <h3>Expense Categorizer</h3>
+            <p>Automatically categorize bank statement transactions from CSV or Excel files using keyword rules.</p>
+            <span class="arrow">Read the docs →</span>
+        </a>
+    </div>
+</div>
+
+<footer>
+    <a href="https://github.com/mizsakpeter/personal-finance-toolkit">Personal Finance Toolkit</a> · Not financial advice.
+</footer>
+
+</body>
+</html>
