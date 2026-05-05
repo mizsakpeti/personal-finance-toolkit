@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>A megtakarítás rejtett költsége — Kalkulátor</title>
+    <title>A kövér bankszámla rejtett költsége — Kalkulátor</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
@@ -211,34 +211,34 @@
 <div class="article">
     <div class="container">
         <div class="meta">Személyes pénzügyek · Kalkulátor</div>
-        <h1>A megtakarítás rejtett költsége</h1>
-        <p class="subtitle">Minden forint, amit félreteszel a jövőbeni kiadásokra, rejtett díjba kerül. A legtöbben ezt sohasem veszik észre — ez a kalkulátor láthatóvá teszi.</p>
+        <h1>A bankszámlán parkoló pénz rejtett költsége</h1>
+        <p class="subtitle">Minden félretett forintnak megvan a maga rejtett ára — minden nap fizetünk azért, hogy később költhessük a fizetésünket. Ez a kalkulátor megmutatja, mennyit is fizetünk mindezért.</p>
 
         <div class="tldr">
             <div class="tldr-label">Röviden</div>
             <ul>
-                <li>A megtakarítás pénzbe kerül. Minden nap, amíg készpénzben tartod a pénzedet, az infláció csendben csökkenti az értékét — és lemaradsz arról, amit kereshetne.</li>
-                <li>A banki folyószámla sokszor reális értelemben veszteség, nem biztonság.</li>
-                <li>A magyar állampapírok (FIXMÁP, MÁP+) ugyanolyan alacsony kockázatot hordoznak, mint egy bankbetét — de sokkal többet hoznak.</li>
+                <li>A megtakarításnak is van ára. Amíg a pénzed bankszámlán hever, az infláció csendben felőrli az értékét — miközben lemondasz arról a hozamról, amit máshol kereshetne.</li>
+                <li>Inflációval számolva a bankszámla sokszor nem biztonságot jelent, hanem lassú veszteséget — csak annyit tarts rajta, amennyire a közeljövőben szükséged lesz.</li>
+                <li>A magyar állampapírok hasonlóan biztonságosak, mint egy bankbetét — de jóval többet hoznak.</li>
             </ul>
             <a href="#calculator">↓ Ugrás a kalkulátorhoz</a>
         </div>
 
-        <p>Amikor fejlesztőként csatlakoztam az MSCI-hoz, az egyik első munkahelyi beilleszkedés során lezajlott beszélgetés azóta is megmaradt bennem. Egy tapasztalt kollégám éppen arról mesélt, mivel is foglalkozik az MSCI — tőzsdeindexek, kockázati modellek, portfólióelemzés — amikor megállt, és valahogy így szólt:</p>
+        <p>Amikor fejlesztőként az MSCI-hoz csatlakoztam, az egyik első tréningen hangzott el egy emlékezetes mondat, ami azóta is sokszor eszembe jut. Egy tapasztalt kolléga az MSCI profiljáról mesélt — tőzsdeindexek, kockázatmodellezés, portfólióelemzés —, és közben valami hasonlót mondott:</p>
 
-        <blockquote>„Őszintén remélem, hogy itt senki sem tart 1500 eurónál több pénzt egy hozamot nem termelő bankszámlán. Mert ti jobban tudjátok mindenki másnál, hogy ez mennyibe kerül nektek."</blockquote>
+        <blockquote>„Őszintén remélem, hogy senki sem tart 500 000 Ft-nál több pénzt hosszú távon a bankszámláján."</blockquote>
 
-        <p>Egy másik megjegyzése ugyanabból a beszélgetésből legalább annyira megmaradt bennem:</p>
+        <p>Először furcsának tűnt, mert pont fizetésnap után voltunk, de a provokatív kijelentés mély nyomot hagyott. Megértettem, hogy mire gondol. Ugyanabból a beszélgetésből egy másik megjegyzés is megragadt:</p>
 
-        <blockquote>„Hallgatólagos díjat fizetsz azért, hogy a pénzedet félretedd a jövőbeni kiadásaidra."</blockquote>
+        <blockquote>„Folyamatosan, szinte észrevétlenül használjuk a modern pénzügyi rendszert — és mindez pénzbe is kerül."</blockquote>
 
-        <p>Gondolj bele. Pénzügyi értelemben szinte soha nem vagy a nulla ponton — vagy van megtakarításod, vagy adósságod, vagy mindkettő. És mivel a fizetésed pénzben érkezik, nem árukban, mindig van egy ablak a megérkezése és az elköltése között. Ez az ablak a megtakarítás: a döntés, hogy majd <em>később</em> költöd el. Bármely adott napon ez a halasztás szinte észrevehetetlen. De ha szerencsés vagy, és következetesen kevesebbet költesz, mint amennyit keresel, ez az egyenleg hónapról hónapra nő. Ahogy nő, úgy nő a rossz helyen tartás költsége is. Néhány százalékpontos különbség kis összegnél alig számít. Felhalmozott megtakarítás esetén azonban egész más szintre kumulálódik.</p>
+        <p>Ha belegondolsz, pénzügyi szempontból szinte soha nem vagy pontosan nullán — vagy van megtakarításod, vagy adósságod, esetleg mindkettő. Az adósság esetén a költség jól látható a kamat formájában. A megtakarítás esetén viszont ez kevésbé nyilvánvaló, hiszen te is kapsz kamatot — csak épp sokkal kevesebbet, mint amennyit lehetne. A fizetésed havi egy alkalommal, forintban érkezik, és jó esetben nem költöd el még aznap. A kettő között eltelt idő már egy megtakarítás: a döntés, hogy ma <em>nem</em> költöd el. Napi szinten ez szinte észrevehetetlen költséggel jár, de ha rendszeresen kevesebbet költesz, mint amennyit keresel, az összeg fokozatosan felhalmozódik. Ahogy nő, úgy nő a bankszámlán heverő pénz rejtett költsége — néhány százalékpont kis tőkénél szinte semmit sem számít, de egy komolyabb megtakarításon már egészen jelentős nagyságrendet jelent. Erről az elmaradt hozamról beszélt a kollégám.</p>
 
-        <p>Ez különösen igaz Magyarországon. A személyes pénzügyekről való nyílt beszéd még mindig ritka — pénzügyi témájú beszélgetések ritkán zajlanak a családi asztalnál, és nincs olyan kulturális hagyomány, amely ezt a tudást generációról generációra adná tovább. Az eredmény nem csupán egy tudásbeli hiány, hanem tévhitek felhalmozódása. <em>„A befektetés kockázatos." „Ez a gazdagoknak való." „A tőzsde szerencsejáték."</em> Ezek a nézetek széles körben elterjedtek, és a cikkben tárgyalt alacsony kockázatú eszközökre vonatkoztatva nagyrészt tévesek.</p>
+        <p>Magyarországon kifejezetten keveseset beszélünk a pénzről — a családi vagy munkahelyi asztalnál ritkán kerül szóba, és nincs az a kulturális minta, ami a pénzügyi tudást generációk között továbbadja. Ennek eredménye nemcsak tudáshiány, hanem félreértések egész sora. <em>„A befektetés kockázatos." „Nincs időm figyelni a piacokat." „Nincs elég pénzem, hogy megérje."</em> Ezek a nézetek mélyen begyökereztek, és az itt említett, alacsony kockázatú eszközökre nézve nagyrészt egyszerűen tévesek.</p>
 
-        <p>Az előző generációk teljesen más gazdasági valóságban navigáltak, azok az eszközök, termékek és kulturális keretek nélkül, amelyek ezeket a döntéseket nyilvánvalóvá tehették volna. Ami megváltozott, az a belépési korlát. Az okostelefonos alkalmazások és online platformok révén ma már valóban egyszerű állampapírszámlát nyitni, követni a megtakarításokat, és közérthető magyarázatokat találni — nem pénzügyi szakembereknek szóló anyagokat. Az eszközök néhány kattintásra elérhetők. Ami még mindig a legtöbbet számít, az a személyes kapcsolat: egy őszinte csevegés valakivel, aki már végiggondolta ezeket a kérdéseket, több félreértést oszlat el, mint hónapnyi passzív olvasás.</p>
+        <p>Az előző generációk egészen más gazdasági körülmények között éltek, és nem álltak rendelkezésükre azok az eszközök, felületek, amelyek ma ezeket a döntéseket kézenfekvővé teszik. Ami igazán megváltozott, az a belépési küszöb. Okostelefonos appokkal ma már tényleg egyszerű állampapír-számlát nyitni, nyomon követni a megtakarításokat, és érthető cikkeket olvasni — olyanokat, amelyek nem feltételeznek komoly pénzügyi alapismeretet. De ami a legtöbbet ér, az nem egy app, hanem egy személyes kapcsolat: őszinte inspiratív beszélgetések olyanokkal, akiket szintén mozgat ez a téma.</p>
 
-        <p>Az alábbi diagram láthatóvá teszi a különbséget — és a számokat, ha egyszer látod, nehéz figyelmen kívül hagyni.</p>
+        <p>Az alábbi diagram az alacsony hozamú bankszámlán heverő pénz elmaradt hozamát teszi láthatóvá:</p>
 
         <hr class="section-break">
     </div>
@@ -247,10 +247,10 @@
 <!-- ── Kalkulátor ── -->
 <div class="calculator" id="calculator">
     <div class="container">
-        <div class="calc-title">Számítsd ki az elmaradt hozamodat</div>
+        <div class="calc-title">Számítsd ki a lehetséges hozamodat</div>
 
         <div class="presets">
-            <span class="presets-label">Előbeállítás:</span>
+            <span class="presets-label">Példák:</span>
             <button class="preset-btn active" id="preset-hu" onclick="loadPreset('hu', this)">🇭🇺 Magyarország 2025</button>
             <button class="preset-btn" id="preset-eu" onclick="loadPreset('eu', this)">🇪🇺 Eurozóna 2025</button>
         </div>
@@ -259,7 +259,7 @@
             <div class="input-group span-2">
                 <label>Induló összeg</label>
                 <div class="row">
-                    <input type="text" id="amount" value="1 000 000" inputmode="numeric"
+                    <input type="text" id="amount" value="5 000 000" inputmode="numeric"
                            style="flex:1;min-width:0;"
                            onfocus="unformatAmount(this)"
                            onblur="formatAmountDisplay(this); recalculate()"
@@ -283,7 +283,7 @@
             </div>
 
             <div class="input-group">
-                <label>Állampapír / befektetési ráta</label>
+                <label>Állampapír / befektetési hozam</label>
                 <div class="row">
                     <input type="number" id="bondRate" value="6.5" min="0" max="50" step="0.1" oninput="recalculate()">
                     <span class="unit">% / év</span>
@@ -291,7 +291,7 @@
             </div>
 
             <div class="input-group">
-                <label>Inflációs ráta</label>
+                <label>Infláció</label>
                 <div class="row">
                     <input type="number" id="inflationRate" value="4.5" min="0" max="50" step="0.1" oninput="recalculate()">
                     <span class="unit">% / év</span>
@@ -352,30 +352,30 @@
 <div class="post-calc">
     <div class="container">
         <h2>Hogyan értelmezd ezt?</h2>
-        <p>A két görbe közötti rés az a pénz, amely az egyik forgatókönyvben létezik, a másikban nem. Ehhez nem kell nagyobb kockázatot vállalni — a magyar állampapírok az állam közvetlen kötelezettségvállalásai. A különbséget szinte teljes egészében az magyarázza, hogy az állampapír megvásárlásához valamivel több erőfeszítés szükséges.</p>
+        <p>A két görbe közötti különbségből látható, mennyivel több pénzed lenne az egyik esetben, mint a másikban. Ehhez nem kell nagyobb kockázatot vállalnod — a magyar állampapírok mögött közvetlenül az állam áll. A különbséget szinte kizárólag az magyarázza, hogy az állampapír megvásárlásához egy kicsivel több utánajárás kell.</p>
 
-        <p>Kapcsold be a <em>„mai vásárlóerőn"</em> nézetet, és a kép még egyértelműbb lesz. A bankszámla görbe akár lefelé is hajolhat az idő múlásával — ami azt jelenti, hogy a pénzed a jövőben kevesebbet ér, mint ma, még a kamattal együtt is. Ez az infláció hatása látható formában. A pozitív névleges hozam reális értelemben negatív lehet.</p>
+        <p>Kapcsold be a <em>„mai vásárlóerőn"</em> nézetet, és a kép még lesújtóbb. A bankszámla görbéje akár le is kúszhat az évek alatt — ami azt jelenti, hogy a pénzed a jövőben kevesebbet fog érni, mint ma, pedig még banki kamatot is kaptál érte.</p>
 
         <div class="insight-box">
             <strong>A lényeg</strong>
-            Az 1%-os bankkamatláb 4,5%-os inflációval nem 1%-os nyereség. Ez évi −3,3%-os reális veszteség (Fisher-egyenlet). 20 év elteltével a vásárlóerőd nagyjából a felére csökken — még akkor is, ha a bankszámládon lévő szám nagyobb.
+            Az 1%-os banki kamatláb 4,5%-os infláció mellett nem 1%-os nyereséget jelent — hanem valójában évi -3,3%-os veszteséget (Fisher-egyenlet). 20 év alatt a vásárlóerőd nagyjából felére apad, miközben a bankszámládon lévő szám még valamit növekedett is.
         </div>
 
         <h2>Mit tehetsz ezzel?</h2>
-        <p>A veszteség mértékének megértése az első lépés. Cselekedni ennél alig tart tovább. Két jó kiindulópont:</p>
+        <p>A veszteség mértékét látni az első lépés. Lépni ellene alig tart tovább. Két jó kiindulópont:</p>
         <ul>
-            <li><a href="https://kiszamolo.hu" target="_blank" rel="noopener">Kiszámoló</a> — közismert magyar személyes pénzügyi blog, amely közérthetően, szakzsargon nélkül magyarázza a pénzügyi döntéseket.</li>
-            <li><a href="https://www.allampapir.hu" target="_blank" rel="noopener">Magyar Állampapír kalkulátor</a> — megmutatja, hogy az állampapírok pontosan mennyit hoznának a te konkrét összegeden, aktuális kamatlábakkal.</li>
+            <li><a href="https://kiszamolo.hu" target="_blank" rel="noopener">Kiszámoló</a> — népszerű magyar személyes pénzügyi blog, amely érthetően, szakzsargon nélkül magyarázza a pénzügyi döntéseket.</li>
+            <li><a href="https://allampapirkalkulator.hu" target="_blank" rel="noopener">Magyar Állampapír kalkulátor</a> — megmutatja, hogy az állampapírok pontosan mennyit hoznának a te konkrét összegeden, aktuális kamatlábakkal.</li>
         </ul>
 
-        <p>Ez nem arról szól, hogy befektetővé válj, aki tőzsdei árfolyamokat figyel. Egyetlen egyszeri döntés — a tétlen megtakarítások jobb eszközbe helyezése — ami egy délutánba telik, és minden ezt követő évben megtérül. Az erőfeszítés minimális; a hosszú távú különbség nem az.</p>
+        <p>Ez nem arról szól, hogy holnaptól befektetővé válj, aki naponta nézi az árfolyamokat. Egyetlen döntés kell: a bankban heverő megtakarításaid jobb helyre rakni. Egy délutánba telik, ami sokszorosan megtérülhet. A ráfordítás minimális — a hosszú távú különbség viszont nem az.</p>
 
         <ul>
-            <li><strong>Magyarország:</strong> A FIXMÁP és MÁP+ közvetlenül az Államkincstárnál érhető el (<a href="https://www.allampapir.hu" target="_blank" rel="noopener">allampapir.hu</a>). Vásárold közvetlenül — ne bankon keresztül, amely díjakat számít fel.</li>
-            <li><strong>EU:</strong> Lekötött betétek és rövid lejáratú állampapírok a legtöbb online bróker platformon elérhetők, lényegesen jobb hozammal, mint egy egyszerű bankszámla.</li>
+            <li><strong>Magyarország:</strong> A FIXMÁP és MÁP+ közvetlenül az Államkincstárnál érhető el (<a href="https://www.allampapir.hu" target="_blank" rel="noopener">allampapir.hu</a>). Vásárold ott — ne bankon keresztül, ahol díjakat számítanak fel.</li>
+            <li><strong>EU:</strong> Lekötött betétek és rövid lejáratú állampapírok a legtöbb online bróker platformon elérhetők, lényegesen jobb hozammal, mint egy sima bankszámla.</li>
         </ul>
 
-        <p>Megjegyzés a kockázatról: ez a kalkulátor a megtakarításaid legbiztonságosabb, leglikvidebb részére fókuszál — arra a tartalékra, amelyet a legtöbb ember tart, jellemzően 3–6 havi kiadásnak megfelelő összegben. Ennek elérhetőnek kell maradnia, és nem szabad piaci ingadozásnak kitenni. Léteznek kockázatosabb, magasabb várható hozamú eszközök, amelyeket hosszú távú megtakarítások esetén érdemes megvizsgálni — de ez már egy másik téma. A lényeg itt szűkebb: még a legkonzervatívabb megtakarításaidnak is jobb helye van. Sokaknál pedig több pénz van ebben a „biztonságos" kategóriában, mint amennyinek kellene lennie.</p>
+        <p>Egy megjegyzés a kockázatról: ez a kalkulátor a megtakarításaid legbiztonságosabb, leglikvidebb részére vonatkozik — arra a tartalékra, amelyet a legtöbben félretesznek, jellemzően 3-6 havi kiadásnak megfelelő összegben. Ennek bármikor elérhetőnek kell maradnia, nem szabad piaci ingadozásnak kitenni. Vannak kockázatosabb, de magasabb hozamú eszközök is, amelyek hosszú távú megtakarítások esetén szóba jöhetnek — de az már egy másik téma. A lényeg itt egyszerű: még a legbiztonságosabb megtakarításaidnak is jobb helye van, mint a bankszámládon.</p>
     </div>
 </div>
 
@@ -383,7 +383,7 @@
 <div class="how-it-works">
     <div class="container">
         <h2>A számítás módszertana</h2>
-        <p>Éves kamatos kamatozás. A „reális érték" átváltás az egzakt Fisher-egyenletet alkalmazza az egyszerűsített közelítés helyett — ez érdemi különbséget jelent 10 évnél hosszabb időtávon.</p>
+        <p>Éves kamatfizetéssel számolva. A „reálérték" számításhoz az egzakt Fisher-egyenletet használjuk az egyszerűsített közelítés helyett — 10 évnél hosszabb időtávon ez érdemi különbséget jelent.</p>
         <div class="formula-box" id="math-formulas">
             $$FV_{\text{bankszámla}} = P \cdot (1 + r_{\text{betét}})^n$$
             $$FV_{\text{állampapír}} = P \cdot (1 + r_{\text{kötvény}})^n$$
@@ -392,7 +392,7 @@
             $$r_{\text{reális}} = \dfrac{1 + r_{\text{névleges}}}{1 + r_{\text{infláció}}} - 1 \quad \text{(Fisher-egyenlet)}$$
             $$\text{Reális elmaradt hozam} = \dfrac{FV_{\text{állampapír}} - FV_{\text{bankszámla}}}{(1 + r_{\text{infláció}})^n}$$
         </div>
-        <p class="disclaimer">Az előre beállított értékek 2025-re vonatkozó közelítő adatok. A magyar kötvényráta az Államkincstár FIXMÁP és MÁP+ termékeire épül; a bankszámla-kamatlábak a főbb magyar bankok (OTP, K&amp;H, Erste) adatain; az inflációs előrejelzés a KSH adatain alapul. Az EU-s adatok az eurózóna átlagos bankszámla-kamatlábain és állampapír-hozamokon alapulnak; az inflációs cél az EKB adatain. Megjegyzés: Az EU-s bankszámla-kamatlábak hasonlóak a magyarokhoz az EKB kamatemelések ellenére — a magyar bankok alacsony betéti kamatot tartanak az MNB alapkamathoz képest. Mindig ellenőrizd az aktuális kamatlábakat pénzügyi döntések meghozatala előtt. Ez nem pénzügyi tanácsadás.</p>
+        <p class="disclaimer">Az előbeállított értékek 2025-re vonatkozó közelítő adatok. A magyar kötvényráta az Államkincstár FIXMÁP és MÁP+ ajánlatán alapul; a bankszámla-kamatlábak a nagyobb hazai bankok (OTP, K&amp;H, Erste) aktuális ajánlatain; az inflációs becslés a KSH adatain. Az EU-s adatok az eurózóna átlagos bankszámla-kamatlábain és állampapír-hozamokon alapulnak; az inflációs cél az EKB adatain. Megjegyzés: az EU-s bankszámla-kamatlábak az EKB-emelések ellenére sem különböznek sokat a magyarokétól — a bankok mindkét piacon keveset adnak át a betéteseknek az alapkamatból. Pénzügyi döntés előtt mindig ellenőrizd az aktuális kamatlábakat. Ez nem pénzügyi tanácsadás.</p>
     </div>
 </div>
 
