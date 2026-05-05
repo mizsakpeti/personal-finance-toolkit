@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HUF vs EUR — Currency Return Calculator</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --blue: #2563eb;
+            --green: #16a34a;
+            --orange: #ea580c;
+            --purple: #7c3aed;
+            --text: #111827;
+            --muted: #6b7280;
+            --border: #e5e7eb;
+            --bg: #f9fafb;
+            --white: #ffffff;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: var(--text);
+            background: var(--bg);
+            line-height: 1.7;
+        }
+
+        header { background: var(--white); border-bottom: 1px solid var(--border); padding: 1rem 1.5rem; }
+        header nav { max-width: 800px; margin: 0 auto; display: flex; align-items: center; gap: 1.5rem; }
+        header .brand { font-weight: 700; font-size: 1rem; text-decoration: none; color: var(--text); margin-right: auto; }
+        header a { color: var(--muted); text-decoration: none; font-size: 0.9rem; }
+        header a:hover { color: var(--text); }
+
+        .container { max-width: 800px; margin: 0 auto; padding: 0 1.5rem; }
+
+        .article { background: var(--white); border-bottom: 1px solid var(--border); padding: 3rem 0 2rem; }
+        .article .meta { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--blue); margin-bottom: 0.75rem; }
+        .article h1 { font-size: 2rem; font-weight: 700; line-height: 1.2; margin-bottom: 0.6rem; }
+        .article .subtitle { color: var(--muted); font-size: 1.05rem; margin-bottom: 1.75rem; }
+        .article p { margin-bottom: 1.1rem; font-size: 1.02rem; }
+
+        .calculator { padding: 2.5rem 0; }
+        .calc-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 0.4rem; }
+        .calc-desc { font-size: 0.9rem; color: var(--muted); margin-bottom: 1.5rem; }
+
+        .section-label {
+            font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.07em; color: var(--muted); margin: 1.25rem 0 0.6rem;
+        }
+
+        .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; margin-bottom: 0.25rem; }
+        @media (max-width: 580px) { .input-grid { grid-template-columns: 1fr; } }
+
+        .input-group {
+            background: var(--white); border: 1px solid var(--border);
+            border-radius: 8px; padding: 0.9rem 1.1rem; transition: border-color 0.15s;
+        }
+        .input-group:focus-within { border-color: var(--blue); }
+        .input-group label {
+            display: block; font-size: 0.72rem; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.06em;
+            color: var(--muted); margin-bottom: 0.3rem;
+        }
+        .input-group .row { display: flex; align-items: baseline; gap: 0.4rem; }
+        .input-group input, .input-group select {
+            border: none; outline: none;
+            font-size: 1.25rem; font-weight: 600;
+            color: var(--text); background: transparent;
+            width: 100%; min-width: 0;
+        }
+        .input-group select { font-size: 1rem; cursor: pointer; }
+        .input-group .unit { font-size: 0.9rem; color: var(--muted); white-space: nowrap; flex-shrink: 0; }
+        .input-group .hint { font-size: 0.75rem; color: var(--muted); margin-top: 0.25rem; }
+        .span-2 { grid-column: span 2; }
+        @media (max-width: 580px) { .span-2 { grid-column: span 1; } }
+
+        .toggle-row {
+            display: flex; align-items: center; gap: 0.75rem;
+            margin: 1.1rem 0; font-size: 0.95rem;
+            cursor: pointer; user-select: none;
+        }
+        .toggle { position: relative; display: inline-block; width: 42px; height: 22px; flex-shrink: 0; }
+        .toggle input { opacity: 0; width: 0; height: 0; }
+        .toggle-track { position: absolute; inset: 0; background: var(--border); border-radius: 22px; transition: background 0.2s; }
+        .toggle-thumb {
+            position: absolute; width: 16px; height: 16px;
+            left: 3px; top: 3px; background: white; border-radius: 50%;
+            transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        .toggle input:checked ~ .toggle-track { background: var(--blue); }
+        .toggle input:checked ~ .toggle-thumb { transform: translateX(20px); }
+
+        .calc-btn {
+            width: 100%; padding: 0.85rem; margin-top: 1.25rem;
+            background: var(--blue); color: white; border: none;
+            border-radius: 8px; font-size: 1rem; font-weight: 600;
+            cursor: pointer; transition: background 0.15s; margin-bottom: 2rem;
+        }
+        .calc-btn:hover { background: #1d4ed8; }
+
+        .results { display: none; animation: fadeIn 0.25s ease; }
+        .results.visible { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+        .result-cards { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.85rem; margin-bottom: 1.25rem; }
+        @media (max-width: 580px) { .result-cards { grid-template-columns: 1fr; } }
+
+        .result-card { background: var(--white); border: 1px solid var(--border); border-radius: 8px; padding: 1.1rem 1.25rem; }
+        .result-card.huf { border-top: 3px solid #f97316; }
+        .result-card.eur { border-top: 3px solid #7c3aed; }
+        .result-card.diff-pos { border-top: 3px solid var(--green); }
+        .result-card.diff-neg { border-top: 3px solid var(--orange); }
+        .result-card .r-label { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 0.2rem; }
+        .result-card .r-value { font-size: 1.3rem; font-weight: 700; line-height: 1.2; }
+        .result-card.eur .r-value { color: var(--purple); }
+        .result-card .r-sub { font-size: 0.78rem; color: var(--muted); margin-top: 0.25rem; }
+        .result-card .r-real { font-size: 0.8rem; color: var(--muted); margin-top: 0.35rem; border-top: 1px solid var(--border); padding-top: 0.35rem; }
+
+        .breakeven-box {
+            background: #faf5ff; border: 1px solid #ddd6fe;
+            border-radius: 8px; padding: 1rem 1.25rem;
+            margin-bottom: 1.25rem; font-size: 0.93rem; color: #4c1d95;
+        }
+        .breakeven-box strong { font-size: 1rem; }
+        .breakeven-box .be-rate { font-size: 1.4rem; font-weight: 700; margin: 0.2rem 0; }
+        .breakeven-box .be-sub { font-size: 0.82rem; opacity: 0.8; }
+
+        .chart-wrap { background: var(--white); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem 1.5rem 1rem; margin-bottom: 0.5rem; }
+        .chart-wrap h3 { font-size: 0.9rem; font-weight: 600; color: var(--muted); margin-bottom: 1.1rem; }
+
+        .how-it-works { background: var(--white); border-top: 1px solid var(--border); padding: 2rem 0; }
+        .how-it-works h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.6rem; }
+        .how-it-works p { font-size: 0.92rem; color: var(--muted); margin-bottom: 0.75rem; }
+        .disclaimer { font-size: 0.82rem; color: var(--muted); border-top: 1px solid var(--border); padding-top: 0.85rem; margin-top: 0.5rem; }
+
+        footer { padding: 1.5rem; text-align: center; font-size: 0.82rem; color: var(--muted); border-top: 1px solid var(--border); }
+        footer a { color: var(--muted); }
+    </style>
+</head>
+<body>
+
+<header>
+    <nav>
+        <a href="../../index.html" class="brand">Personal Finance Toolkit</a>
+        <a href="../../index.html">All tools</a>
+        <a href="https://github.com/mizsakpeter/personal-finance-toolkit">GitHub</a>
+    </nav>
+</header>
+
+<div class="article">
+    <div class="container">
+        <div class="meta">Personal Finance · Calculator</div>
+        <h1>HUF or EUR — Where Should Your Savings Work?</h1>
+        <p class="subtitle">Hungarian bonds currently yield significantly more than EUR equivalents. But EUR has historically strengthened against HUF. This calculator shows which path comes out ahead — and what exchange rate would flip the result.</p>
+
+        <p>The core trade-off: keep your savings in HUF and earn a higher interest rate, or convert to EUR, earn a lower rate, and potentially benefit from currency appreciation. Neither is obviously better — it depends on how much EUR/HUF moves over your time horizon. The breakeven exchange rate this calculator shows is the key number: if your forecast is above it, EUR wins; below it, HUF wins.</p>
+
+        <p>EUR/HUF has averaged roughly 2–3% annual appreciation over the past decade (from ~310 in 2015 to ~403 in May 2025). The current interest rate gap between HUF bonds and EUR savings is around 4–5 percentage points. These two forces are pulling in opposite directions — and the calculator makes that tension visible.</p>
+    </div>
+</div>
+
+<div class="calculator" id="calculator">
+    <div class="container">
+        <div class="calc-title">Calculate your currency return</div>
+        <div class="calc-desc">Compare keeping savings in HUF bonds vs converting to EUR and investing there.</div>
+
+        <p class="section-label">Starting position</p>
+        <div class="input-grid">
+            <div class="input-group span-2">
+                <label>Starting Amount (HUF)</label>
+                <div class="row">
+                    <input type="text" id="amount" value="5 000 000" inputmode="numeric"
+                           style="flex:1;min-width:0;"
+                           onfocus="unformatAmount(this)"
+                           onblur="formatAmountDisplay(this); recalculate()"
+                           oninput="recalculate()">
+                    <span class="unit">Ft</span>
+                </div>
+            </div>
+        </div>
+
+        <p class="section-label">Exchange rates</p>
+        <div class="input-grid">
+            <div class="input-group">
+                <label>Current EUR/HUF rate</label>
+                <div class="row">
+                    <input type="number" id="rateNow" value="365" min="100" max="2000" step="1" oninput="recalculate()">
+                    <span class="unit">Ft / €</span>
+                </div>
+                <div class="hint">EUR 1 = ? HUF today (May 2026: ~365)</div>
+            </div>
+            <div class="input-group">
+                <label>Target EUR/HUF rate</label>
+                <div class="row">
+                    <input type="number" id="rateTarget" value="450" min="100" max="2000" step="1" oninput="recalculate()">
+                    <span class="unit">Ft / €</span>
+                </div>
+                <div class="hint">Your forecast at end of period</div>
+            </div>
+        </div>
+
+        <p class="section-label">Interest & inflation</p>
+        <div class="input-grid">
+            <div class="input-group">
+                <label>HUF bond rate</label>
+                <div class="row">
+                    <input type="number" id="rateHuf" value="7.0" min="0" max="50" step="0.1" oninput="recalculate()">
+                    <span class="unit">% / year</span>
+                </div>
+                <div class="hint">FixMÁP / MÁP+ (May 2025: 7.0%)</div>
+            </div>
+            <div class="input-group">
+                <label>EUR savings rate</label>
+                <div class="row">
+                    <input type="number" id="rateEur" value="2.0" min="0" max="50" step="0.1" oninput="recalculate()">
+                    <span class="unit">% / year</span>
+                </div>
+                <div class="hint">EU gov't bonds / savings (2026: ~2.0%)</div>
+            </div>
+            <div class="input-group">
+                <label>HUF inflation</label>
+                <div class="row">
+                    <input type="number" id="inflHuf" value="3.2" min="0" max="50" step="0.1" oninput="recalculate()">
+                    <span class="unit">% / year</span>
+                </div>
+                <div class="hint">MNB 2026 forecast: ~3.2%</div>
+            </div>
+        </div>
+
+        <div class="input-grid" style="margin-top:0.85rem;">
+            <div class="input-group span-2">
+                <label>Time Horizon</label>
+                <div class="row">
+                    <input type="number" id="years" value="5" min="1" max="30" step="1" oninput="recalculate()">
+                    <span class="unit">years</span>
+                </div>
+            </div>
+        </div>
+
+        <label class="toggle-row" for="realToggle">
+            <span class="toggle">
+                <input type="checkbox" id="realToggle" onchange="recalculate()">
+                <span class="toggle-track"></span>
+                <span class="toggle-thumb"></span>
+            </span>
+            Show values in today's purchasing power (inflation-adjusted)
+        </label>
+
+        <button class="calc-btn" onclick="calculate()">Calculate →</button>
+
+        <div class="results" id="results">
+
+            <div class="breakeven-box" id="breakeven-box">
+                <strong>EUR/HUF breakeven rate</strong>
+                <div class="be-rate" id="be-rate">—</div>
+                <div class="be-sub" id="be-sub">—</div>
+            </div>
+
+            <div class="result-cards">
+                <div class="result-card huf">
+                    <div class="r-label">HUF bonds</div>
+                    <div class="r-value" id="val-huf"></div>
+                    <div class="r-sub" id="sub-huf"></div>
+                    <div class="r-real" id="real-huf"></div>
+                </div>
+                <div class="result-card eur">
+                    <div class="r-label">EUR bonds (in HUF)</div>
+                    <div class="r-value" id="val-eur"></div>
+                    <div class="r-sub" id="sub-eur"></div>
+                    <div class="r-real" id="real-eur"></div>
+                </div>
+                <div class="result-card" id="card-diff">
+                    <div class="r-label">Difference</div>
+                    <div class="r-value" id="val-diff"></div>
+                    <div class="r-sub" id="sub-diff"></div>
+                    <div class="r-real" id="real-diff"></div>
+                </div>
+            </div>
+
+            <div class="chart-wrap">
+                <h3 id="chart-title">Value over time (in HUF)</h3>
+                <canvas id="chart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="how-it-works">
+    <div class="container">
+        <h2>How the calculation works</h2>
+        <p><strong>HUF path:</strong> starting amount grows at the HUF bond rate for N years.</p>
+        <p><strong>EUR path:</strong> starting amount is converted to EUR at the current rate, grows at the EUR bond rate for N years, then converted back to HUF at the target rate. For intermediate chart points, the exchange rate is interpolated geometrically — the rate drifts smoothly from current to target over the period.</p>
+        <p><strong>Breakeven rate:</strong> the EUR/HUF rate at which both paths produce the same final HUF value. Derived by solving: <em>P × (1 + r<sub>HUF</sub>)<sup>n</sup> = (P / rate<sub>now</sub>) × (1 + r<sub>EUR</sub>)<sup>n</sup> × rate<sub>breakeven</sub></em>, giving <em>rate<sub>breakeven</sub> = rate<sub>now</sub> × (1 + r<sub>HUF</sub>)<sup>n</sup> / (1 + r<sub>EUR</sub>)<sup>n</sup></em>.</p>
+        <p><strong>Real values</strong> deflate both paths using HUF inflation — since both end in HUF, this answers the same question for each: what can you actually buy in Hungary?</p>
+        <p class="disclaimer">Preset rates are approximate figures for May 2026. HUF bond rate from FixMÁP/MÁP+ (Államkincstár); EUR rate from ECB deposit facility rate (2.00%) and typical eurozone savings accounts; HUF inflation from MNB 2026 forecast (~3.2%); EUR inflation from ECB March 2026 projections (~2.6%). EUR/HUF: ~365 (May 2026); historical reference: ~403 (May 2025), ~310 (2015). Exchange rate forecasts are inherently uncertain — this calculator is a scenario tool, not a prediction. Not financial advice.</p>
+    </div>
+</div>
+
+<footer>
+    Part of <a href="../../index.html">Personal Finance Toolkit</a> ·
+    <a href="https://github.com/mizsakpeter/personal-finance-toolkit">GitHub</a> ·
+    Not financial advice.
+</footer>
+
+<script>
+function formatAmountDisplay(el) {
+    const raw = parseFloat(el.value.replace(/\s/g, '').replace(',', '.'));
+    if (!isNaN(raw) && raw >= 0) el.value = Math.round(raw).toLocaleString('hu-HU').replace(/,/g, ' ');
+}
+function unformatAmount(el) {
+    el.value = el.value.replace(/\s/g, '');
+}
+function getAmount() {
+    return parseFloat(document.getElementById('amount').value.replace(/\s/g, '').replace(',', '.'));
+}
+
+function fmtFull(value) {
+    const rounded = Math.round(Math.abs(value));
+    return rounded.toLocaleString('hu-HU').replace(/,/g, ' ') + ' Ft';
+}
+
+function fmtShort(value) {
+    const abs = Math.abs(value);
+    let s;
+    if (abs >= 1e9)      s = (value / 1e9).toFixed(1) + ' B Ft';
+    else if (abs >= 1e6) s = (value / 1e6).toFixed(2) + ' M Ft';
+    else if (abs >= 1e3) s = (value / 1e3).toFixed(1) + ' K Ft';
+    else                 s = Math.round(value) + ' Ft';
+    return s;
+}
+
+function fmtRate(r) {
+    return r.toFixed(0) + ' Ft/€';
+}
+
+function pct(rate) {
+    return (rate * 100).toFixed(1) + '%';
+}
+
+function recalculate() {
+    if (document.getElementById('results').classList.contains('visible')) calculate();
+}
+
+let chartInstance = null;
+
+function calculate() {
+    const P        = getAmount();
+    const rNow     = parseFloat(document.getElementById('rateNow').value);
+    const rTarget  = parseFloat(document.getElementById('rateTarget').value);
+    const rHuf     = parseFloat(document.getElementById('rateHuf').value) / 100;
+    const rEur     = parseFloat(document.getElementById('rateEur').value) / 100;
+    const iHuf     = parseFloat(document.getElementById('inflHuf').value) / 100;
+    const n        = parseInt(document.getElementById('years').value);
+    const showReal = document.getElementById('realToggle').checked;
+
+    if ([P, rNow, rTarget, rHuf, rEur, iHuf, n].some(v => isNaN(v) || v < 0) || n < 1 || rNow <= 0) return;
+
+    const pts = n + 1;
+
+    // HUF path nominal
+    const hufNom = Array.from({ length: pts }, (_, y) => P * Math.pow(1 + rHuf, y));
+
+    // EUR path: geometric rate interpolation, value in HUF
+    const eurNom = Array.from({ length: pts }, (_, y) => {
+        const rateY = rNow * Math.pow(rTarget / rNow, y / n);
+        return (P / rNow) * Math.pow(1 + rEur, y) * rateY;
+    });
+
+    // Real values: both deflated by HUF inflation — both paths end in HUF,
+    // so the question is the same: what can you buy in Hungary?
+    const hufReal = hufNom.map((v, y) => v / Math.pow(1 + iHuf, y));
+    const eurReal = eurNom.map((v, y) => v / Math.pow(1 + iHuf, y));
+
+    const fvHuf      = hufNom[n];
+    const fvEur      = eurNom[n];
+    const pvHuf      = hufReal[n];
+    const pvEur      = eurReal[n];
+    const nomDiff    = fvEur - fvHuf;
+    const realDiff   = pvEur - pvHuf;
+
+    // Breakeven: rateNow * (1+rHuf)^n / (1+rEur)^n
+    const breakeven  = rNow * Math.pow(1 + rHuf, n) / Math.pow(1 + rEur, n);
+    const annualFxNeeded = Math.pow(breakeven / rNow, 1 / n) - 1;
+
+    // Breakeven box
+    document.getElementById('be-rate').textContent = fmtRate(breakeven);
+    const historicalAvg = ((403 / 310) - 1) / 10; // ~2.6%/yr over 10y
+    const beSubText = `EUR/HUF needs to rise ${pct(annualFxNeeded)}/yr for EUR path to break even. `
+        + (rTarget >= breakeven
+            ? `Your forecast (${fmtRate(rTarget)}) is above this → EUR path wins.`
+            : `Your forecast (${fmtRate(rTarget)}) is below this → HUF path wins.`);
+    document.getElementById('be-sub').textContent = beSubText;
+
+    // Real rates: both measured against HUF inflation (both paths end in HUF)
+    const realHufRate    = Math.pow(1 + rHuf, 1) / Math.pow(1 + iHuf, 1) - 1;
+    // EUR path effective annual return in HUF = interest × FX drift, then deflate by HUF inflation
+    const fxDriftPerYear = Math.pow(rTarget / rNow, 1 / n);
+    const realEurRateHuf = (1 + rEur) * fxDriftPerYear / (1 + iHuf) - 1;
+
+    // Result cards
+    if (showReal) {
+        document.getElementById('val-huf').textContent  = fmtFull(pvHuf);
+        document.getElementById('sub-huf').textContent  = 'in today\'s purchasing power';
+        document.getElementById('real-huf').textContent = 'Real rate: ' + pct(realHufRate) + '/yr  ·  nominal: ' + fmtFull(fvHuf);
+
+        document.getElementById('val-eur').textContent  = fmtFull(pvEur);
+        document.getElementById('sub-eur').textContent  = 'in today\'s purchasing power (HUF)';
+        document.getElementById('real-eur').textContent = 'Real rate incl. FX: ' + pct(realEurRateHuf) + '/yr  ·  nominal: ' + fmtFull(fvEur);
+
+        document.getElementById('val-diff').textContent = (realDiff >= 0 ? '+' : '') + fmtFull(realDiff);
+        document.getElementById('sub-diff').textContent = realDiff >= 0 ? 'EUR path ahead (real)' : 'HUF path ahead (real)';
+        document.getElementById('real-diff').textContent = 'Nominal: ' + (nomDiff >= 0 ? '+' : '') + fmtFull(nomDiff);
+    } else {
+        document.getElementById('val-huf').textContent  = fmtFull(fvHuf);
+        document.getElementById('sub-huf').textContent  = 'nominal future value';
+        document.getElementById('real-huf').textContent = 'Real value: ' + fmtFull(pvHuf) + '  ·  real rate: ' + pct(realHufRate) + '/yr';
+
+        document.getElementById('val-eur').textContent  = fmtFull(fvEur);
+        document.getElementById('sub-eur').textContent  = 'nominal future value (in HUF)';
+        document.getElementById('real-eur').textContent = 'Real value: ' + fmtFull(pvEur) + '  ·  real rate incl. FX: ' + pct(realEurRateHuf) + '/yr';
+
+        document.getElementById('val-diff').textContent = (nomDiff >= 0 ? '+' : '') + fmtFull(nomDiff);
+        document.getElementById('sub-diff').textContent = nomDiff >= 0 ? 'EUR path ahead' : 'HUF path ahead';
+        document.getElementById('real-diff').textContent = 'Real: ' + (realDiff >= 0 ? '+' : '') + fmtFull(realDiff);
+    }
+
+    // Diff card colour
+    const diffCard = document.getElementById('card-diff');
+    diffCard.className = 'result-card ' + ((showReal ? realDiff : nomDiff) >= 0 ? 'diff-pos' : 'diff-neg');
+
+    // Chart
+    const labels = Array.from({ length: pts }, (_, i) => 'Yr ' + i);
+    document.getElementById('chart-title').textContent = showReal
+        ? 'Real value over time (in HUF, inflation-adjusted)'
+        : 'Nominal value over time (in HUF)';
+
+    const hufData = showReal ? hufReal : hufNom;
+    const eurData = showReal ? eurReal : eurNom;
+
+    const hufWinning = (eurData[n] < hufData[n]);
+
+    if (chartInstance) chartInstance.destroy();
+    chartInstance = new Chart(document.getElementById('chart').getContext('2d'), {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [
+                {
+                    label: 'HUF bonds',
+                    data: hufData,
+                    borderColor: '#f97316',
+                    backgroundColor: 'transparent',
+                    borderWidth: 2.5,
+                    pointRadius: 0,
+                    fill: false,
+                    tension: 0.3,
+                    order: hufWinning ? 1 : 2,
+                },
+                {
+                    label: 'EUR bonds (in HUF)',
+                    data: eurData,
+                    borderColor: '#7c3aed',
+                    backgroundColor: hufWinning ? 'rgba(249,115,22,0.08)' : 'rgba(124,58,237,0.08)',
+                    borderWidth: 2.5,
+                    pointRadius: 0,
+                    fill: { target: 0, above: 'rgba(124,58,237,0.08)', below: 'rgba(249,115,22,0.08)' },
+                    tension: 0.3,
+                    order: hufWinning ? 2 : 1,
+                },
+            ]
+        },
+        options: {
+            responsive: true,
+            aspectRatio: 2.2,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: { position: 'top', labels: { boxWidth: 14, font: { size: 12 } } },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => '  ' + ctx.dataset.label + ': ' + fmtFull(ctx.parsed.y),
+                    }
+                }
+            },
+            scales: {
+                x: { ticks: { maxTicksLimit: 10, font: { size: 11 } } },
+                y: { ticks: { font: { size: 11 }, callback: v => fmtShort(v) } }
+            }
+        }
+    });
+
+    document.getElementById('results').classList.add('visible');
+}
+
+window.addEventListener('load', () => calculate());
+</script>
+
+</body>
+</html>
