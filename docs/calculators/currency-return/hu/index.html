@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hu">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HUF vs EUR — Currency Return Calculator</title>
+    <title>HUF vs EUR — Deviza-hozam kalkulátor</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         :root {
@@ -141,34 +141,34 @@
 
 <header>
     <nav>
-        <a href="../../index.html" class="brand">Personal Finance Toolkit</a>
-        <a href="../../index.html">All tools</a>
-        <a href="hu/index.html">HU</a>
+        <a href="../../../index.html" class="brand">Personal Finance Toolkit</a>
+        <a href="../../../index.html">Összes eszköz</a>
+        <a href="../index.html">EN</a>
         <a href="https://github.com/mizsakpeti/personal-finance-toolkit">GitHub</a>
     </nav>
 </header>
 
 <div class="article">
     <div class="container">
-        <div class="meta">Personal Finance · Calculator</div>
-        <h1>HUF or EUR — Where Should Your Savings Work?</h1>
-        <p class="subtitle">Hungarian bonds currently yield significantly more than EUR equivalents. But EUR has historically strengthened against HUF. This calculator shows which path comes out ahead — and what exchange rate would flip the result.</p>
+        <div class="meta">Személyes pénzügy · Kalkulátor</div>
+        <h1>HUF vagy EUR — Hol dolgozzon a megtakarításod?</h1>
+        <p class="subtitle">A magyar állampapírok jelenleg lényegesen magasabb hozamot kínálnak, mint az eurós megfelelőik. Ugyanakkor az euró történelmileg erősödött a forinttal szemben. Ez a kalkulátor megmutatja, melyik út jár jobban — és hogy milyen árfolyamon fordulna meg az eredmény.</p>
 
-        <p>The core trade-off: keep your savings in HUF and earn a higher interest rate, or convert to EUR, earn a lower rate, and potentially benefit from currency appreciation. Neither is obviously better — it depends on how much EUR/HUF moves over your time horizon. The breakeven exchange rate this calculator shows is the key number: if your forecast is above it, EUR wins; below it, HUF wins.</p>
+        <p>Az alapvető dilemma: forintban tartod a megtakarításod és magasabb kamatot kapsz, vagy euróra váltasz, alacsonyabb kamattal, de esetleg profitálsz az árfolyam-erősödésből. Egyik sem egyértelműen jobb a másiknál — minden az EUR/HUF elmozdulásán múlik. A kalkulátor által meghatározott fedezeti árfolyam a kulcsszám: ha a saját becslésed e fölé esik, az eurós út nyer; ha alá, a forintos.</p>
 
-        <p>EUR/HUF has averaged roughly 2–3% annual appreciation over the past decade (from ~310 in 2015 to ~403 in May 2025). The current interest rate gap between HUF bonds and EUR savings is around 4–5 percentage points. These two forces are pulling in opposite directions — and the calculator makes that tension visible.</p>
+        <p>Az EUR/HUF az elmúlt tíz évben átlagosan évi 2–3%-ot erősödött (kb. 310-ről 2015-ben ~403 Ft-ra 2025 májusában). A forint- és eurós kötvények közötti kamatrés jelenleg 4–5 százalékpont körül van. Ez a két erő ellentétes irányba húz — a kalkulátor ezt a feszültséget teszi láthatóvá.</p>
     </div>
 </div>
 
 <div class="calculator" id="calculator">
     <div class="container">
-        <div class="calc-title">Calculate your currency return</div>
-        <div class="calc-desc">Compare keeping savings in HUF bonds vs converting to EUR and investing there.</div>
+        <div class="calc-title">Számold ki a deviza-hozamot</div>
+        <div class="calc-desc">Hasonlítsd össze a forintos megtakarítást és az eurós befektetést.</div>
 
-        <p class="section-label">Starting position</p>
+        <p class="section-label">Kiindulópont</p>
         <div class="input-grid">
             <div class="input-group span-2">
-                <label>Starting Amount (HUF)</label>
+                <label>Kezdőösszeg (HUF)</label>
                 <div class="row">
                     <input type="text" id="amount" value="5 000 000" inputmode="numeric"
                            style="flex:1;min-width:0;"
@@ -180,60 +180,60 @@
             </div>
         </div>
 
-        <p class="section-label">Exchange rates</p>
+        <p class="section-label">Árfolyamok</p>
         <div class="input-grid">
             <div class="input-group">
-                <label>Current EUR/HUF rate</label>
+                <label>Jelenlegi EUR/HUF árfolyam</label>
                 <div class="row">
                     <input type="number" id="rateNow" value="365" min="100" max="2000" step="1" oninput="recalculate()">
                     <span class="unit">Ft / €</span>
                 </div>
-                <div class="hint">EUR 1 = ? HUF today (May 2026: ~365)</div>
+                <div class="hint">1 EUR = ? HUF ma (2026. május: ~365)</div>
             </div>
             <div class="input-group">
-                <label>Target EUR/HUF rate</label>
+                <label>Célárfolyam</label>
                 <div class="row">
                     <input type="number" id="rateTarget" value="450" min="100" max="2000" step="1" oninput="recalculate()">
                     <span class="unit">Ft / €</span>
                 </div>
-                <div class="hint">Your forecast at end of period</div>
+                <div class="hint">Saját becslésed az időszak végére</div>
             </div>
         </div>
 
-        <p class="section-label">Interest & inflation</p>
+        <p class="section-label">Kamat és infláció</p>
         <div class="input-grid">
             <div class="input-group">
-                <label>HUF bond rate</label>
+                <label>Forint kötvényhozam</label>
                 <div class="row">
                     <input type="number" id="rateHuf" value="7.0" min="0" max="50" step="0.1" oninput="recalculate()">
-                    <span class="unit">% / year</span>
+                    <span class="unit">% / év</span>
                 </div>
-                <div class="hint">FixMÁP / MÁP+ (May 2025: 7.0%)</div>
+                <div class="hint">FixMÁP / MÁP+ (2025. május: 7,0%)</div>
             </div>
             <div class="input-group">
-                <label>EUR savings rate</label>
+                <label>Eurós megtakarítási kamat</label>
                 <div class="row">
                     <input type="number" id="rateEur" value="2.0" min="0" max="50" step="0.1" oninput="recalculate()">
-                    <span class="unit">% / year</span>
+                    <span class="unit">% / év</span>
                 </div>
-                <div class="hint">EU gov't bonds / savings (2026: ~2.0%)</div>
+                <div class="hint">EU állampapír / megtakarítás (2026: ~2,0%)</div>
             </div>
             <div class="input-group">
-                <label>HUF inflation</label>
+                <label>Forint infláció</label>
                 <div class="row">
                     <input type="number" id="inflHuf" value="3.2" min="0" max="50" step="0.1" oninput="recalculate()">
-                    <span class="unit">% / year</span>
+                    <span class="unit">% / év</span>
                 </div>
-                <div class="hint">MNB 2026 forecast: ~3.2%</div>
+                <div class="hint">MNB 2026-os előrejelzés: ~3,2%</div>
             </div>
         </div>
 
         <div class="input-grid" style="margin-top:0.85rem;">
             <div class="input-group span-2">
-                <label>Time Horizon</label>
+                <label>Időtáv</label>
                 <div class="row">
                     <input type="number" id="years" value="5" min="1" max="30" step="1" oninput="recalculate()">
-                    <span class="unit">years</span>
+                    <span class="unit">év</span>
                 </div>
             </div>
         </div>
@@ -244,34 +244,34 @@
                 <span class="toggle-track"></span>
                 <span class="toggle-thumb"></span>
             </span>
-            Show values in today's purchasing power (inflation-adjusted)
+            Értékek megjelenítése mai vásárlóerőn (inflációval korrigálva)
         </label>
 
-        <button class="calc-btn" onclick="calculate()">Calculate →</button>
+        <button class="calc-btn" onclick="calculate()">Számolj →</button>
 
         <div class="results" id="results">
 
             <div class="breakeven-box" id="breakeven-box">
-                <strong>EUR/HUF breakeven rate</strong>
+                <strong>EUR/HUF fedezeti árfolyam</strong>
                 <div class="be-rate" id="be-rate">—</div>
                 <div class="be-sub" id="be-sub">—</div>
             </div>
 
             <div class="result-cards">
                 <div class="result-card huf">
-                    <div class="r-label">HUF bonds</div>
+                    <div class="r-label">HUF kötvény</div>
                     <div class="r-value" id="val-huf"></div>
                     <div class="r-sub" id="sub-huf"></div>
                     <div class="r-real" id="real-huf"></div>
                 </div>
                 <div class="result-card eur">
-                    <div class="r-label">EUR bonds (in HUF)</div>
+                    <div class="r-label">EUR kötvény (HUF-ban)</div>
                     <div class="r-value" id="val-eur"></div>
                     <div class="r-sub" id="sub-eur"></div>
                     <div class="r-real" id="real-eur"></div>
                 </div>
                 <div class="result-card" id="card-diff">
-                    <div class="r-label">Difference</div>
+                    <div class="r-label">Különbség</div>
                     <div class="r-value" id="val-diff"></div>
                     <div class="r-sub" id="sub-diff"></div>
                     <div class="r-real" id="real-diff"></div>
@@ -279,7 +279,7 @@
             </div>
 
             <div class="chart-wrap">
-                <h3 id="chart-title">Value over time (in HUF)</h3>
+                <h3 id="chart-title">Értékalakulás az évek során (HUF-ban)</h3>
                 <canvas id="chart"></canvas>
             </div>
         </div>
@@ -288,19 +288,19 @@
 
 <div class="how-it-works">
     <div class="container">
-        <h2>How the calculation works</h2>
-        <p><strong>HUF path:</strong> starting amount grows at the HUF bond rate for N years.</p>
-        <p><strong>EUR path:</strong> starting amount is converted to EUR at the current rate, grows at the EUR bond rate for N years, then converted back to HUF at the target rate. For intermediate chart points, the exchange rate is interpolated geometrically — the rate drifts smoothly from current to target over the period.</p>
-        <p><strong>Breakeven rate:</strong> the EUR/HUF rate at which both paths produce the same final HUF value. Derived by solving: <em>P × (1 + r<sub>HUF</sub>)<sup>n</sup> = (P / rate<sub>now</sub>) × (1 + r<sub>EUR</sub>)<sup>n</sup> × rate<sub>breakeven</sub></em>, giving <em>rate<sub>breakeven</sub> = rate<sub>now</sub> × (1 + r<sub>HUF</sub>)<sup>n</sup> / (1 + r<sub>EUR</sub>)<sup>n</sup></em>.</p>
-        <p><strong>Real values</strong> deflate both paths using HUF inflation — since both end in HUF, this answers the same question for each: what can you actually buy in Hungary?</p>
-        <p class="disclaimer">Preset rates are approximate figures for May 2026. HUF bond rate from FixMÁP/MÁP+ (Államkincstár); EUR rate from ECB deposit facility rate (2.00%) and typical eurozone savings accounts; HUF inflation from MNB 2026 forecast (~3.2%); EUR inflation from ECB March 2026 projections (~2.6%). EUR/HUF: ~365 (May 2026); historical reference: ~403 (May 2025), ~310 (2015). Exchange rate forecasts are inherently uncertain — this calculator is a scenario tool, not a prediction. Not financial advice.</p>
+        <h2>A számítás menete</h2>
+        <p><strong>Forintos út:</strong> a kezdőösszeg a HUF kötvényhozam szerint kamatozik N éven át.</p>
+        <p><strong>Eurós út:</strong> a kezdőösszeget a jelenlegi árfolyamon euróra váltjuk, az EUR kötvényhozamon kamatozik N évig, majd a célárfolyamon visszaváltjuk forintra. A közbülső grafikonpontokhoz az árfolyamot mértani interpolációval számítjuk — az árfolyam folyamatosan, egyenletesen mozdul a jelenlegi szintről a célig.</p>
+        <p><strong>Fedezeti árfolyam:</strong> az az EUR/HUF szint, amelyen mindkét út ugyanolyan végső forintértéket ad. Levezetése: <em>P × (1 + r<sub>HUF</sub>)<sup>n</sup> = (P / árfolyam<sub>most</sub>) × (1 + r<sub>EUR</sub>)<sup>n</sup> × árfolyam<sub>fedezeti</sub></em>, amiből: <em>árfolyam<sub>fedezeti</sub> = árfolyam<sub>most</sub> × (1 + r<sub>HUF</sub>)<sup>n</sup> / (1 + r<sub>EUR</sub>)<sup>n</sup></em>.</p>
+        <p><strong>Reálértékek</strong> — mindkét utat a forint inflációjával korrigáljuk, mivel mindkettő forintban végződik. A kérdés ugyanaz: mennyit lehet ténylegesen vásárolni Magyarországon?</p>
+        <p class="disclaimer">Az alapértelmezett értékek 2026. május körüli adatokon alapulnak. A forint kötvényhozam forrása a FixMÁP/MÁP+ (Államkincstár); az eurós kamat az EKB betéti rendelkezésre állás kamatláb (2,00%) és jellemző eurozónás megtakarítási számlák alapján; a forint infláció az MNB 2026-os előrejelzése (~3,2%); az EUR/HUF árfolyam: ~365 (2026. május); összehasonlításként: ~403 (2025. május), ~310 (2015). Az árfolyam-előrejelzések természetüknél fogva bizonytalanok — ez a kalkulátor forgatókönyv-elemző eszköz, nem jóslat. Nem minősül pénzügyi tanácsadásnak.</p>
     </div>
 </div>
 
 <footer>
-    Part of <a href="../../index.html">Personal Finance Toolkit</a> ·
+    Részese a <a href="../../../index.html">Personal Finance Toolkit</a>-nek ·
     <a href="https://github.com/mizsakpeti/personal-finance-toolkit">GitHub</a> ·
-    Not financial advice.
+    Nem minősül pénzügyi tanácsadásnak.
 </footer>
 
 <script>
@@ -323,9 +323,9 @@ function fmtFull(value) {
 function fmtShort(value) {
     const abs = Math.abs(value);
     let s;
-    if (abs >= 1e9)      s = (value / 1e9).toFixed(1) + ' B Ft';
+    if (abs >= 1e9)      s = (value / 1e9).toFixed(1) + ' Mrd Ft';
     else if (abs >= 1e6) s = (value / 1e6).toFixed(2) + ' M Ft';
-    else if (abs >= 1e3) s = (value / 1e3).toFixed(1) + ' K Ft';
+    else if (abs >= 1e3) s = (value / 1e3).toFixed(1) + ' e Ft';
     else                 s = Math.round(value) + ' Ft';
     return s;
 }
@@ -335,7 +335,7 @@ function fmtRate(r) {
 }
 
 function pct(rate) {
-    return (rate * 100).toFixed(1) + '%';
+    return (rate * 100).toFixed(1).replace('.', ',') + '%';
 }
 
 function recalculate() {
@@ -367,8 +367,7 @@ function calculate() {
         return (P / rNow) * Math.pow(1 + rEur, y) * rateY;
     });
 
-    // Real values: both deflated by HUF inflation — both paths end in HUF,
-    // so the question is the same: what can you buy in Hungary?
+    // Real values: both deflated by HUF inflation — both paths end in HUF
     const hufReal = hufNom.map((v, y) => v / Math.pow(1 + iHuf, y));
     const eurReal = eurNom.map((v, y) => v / Math.pow(1 + iHuf, y));
 
@@ -385,44 +384,42 @@ function calculate() {
 
     // Breakeven box
     document.getElementById('be-rate').textContent = fmtRate(breakeven);
-    const historicalAvg = ((403 / 310) - 1) / 10; // ~2.6%/yr over 10y
-    const beSubText = `EUR/HUF needs to rise ${pct(annualFxNeeded)}/yr for EUR path to break even. `
+    const beSubText = `Az EUR úthoz az EUR/HUF-nak évi ${pct(annualFxNeeded)}-ot kell emelkednie. `
         + (rTarget >= breakeven
-            ? `Your forecast (${fmtRate(rTarget)}) is above this → EUR path wins.`
-            : `Your forecast (${fmtRate(rTarget)}) is below this → HUF path wins.`);
+            ? `A te becslésed (${fmtRate(rTarget)}) e fölött van → az EUR út nyer.`
+            : `A te becslésed (${fmtRate(rTarget)}) e alatt van → a HUF út nyer.`);
     document.getElementById('be-sub').textContent = beSubText;
 
-    // Real rates: both measured against HUF inflation (both paths end in HUF)
+    // Real rates
     const realHufRate    = Math.pow(1 + rHuf, 1) / Math.pow(1 + iHuf, 1) - 1;
-    // EUR path effective annual return in HUF = interest × FX drift, then deflate by HUF inflation
     const fxDriftPerYear = Math.pow(rTarget / rNow, 1 / n);
     const realEurRateHuf = (1 + rEur) * fxDriftPerYear / (1 + iHuf) - 1;
 
     // Result cards
     if (showReal) {
         document.getElementById('val-huf').textContent  = fmtFull(pvHuf);
-        document.getElementById('sub-huf').textContent  = 'in today\'s purchasing power';
-        document.getElementById('real-huf').textContent = 'Real rate: ' + pct(realHufRate) + '/yr  ·  nominal: ' + fmtFull(fvHuf);
+        document.getElementById('sub-huf').textContent  = 'mai vásárlóerőn';
+        document.getElementById('real-huf').textContent = 'Reálkamat: ' + pct(realHufRate) + '/év  ·  nominális: ' + fmtFull(fvHuf);
 
         document.getElementById('val-eur').textContent  = fmtFull(pvEur);
-        document.getElementById('sub-eur').textContent  = 'in today\'s purchasing power (HUF)';
-        document.getElementById('real-eur').textContent = 'Real rate incl. FX: ' + pct(realEurRateHuf) + '/yr  ·  nominal: ' + fmtFull(fvEur);
+        document.getElementById('sub-eur').textContent  = 'mai vásárlóerőn (HUF)';
+        document.getElementById('real-eur').textContent = 'Reálkamat (árfolyammal): ' + pct(realEurRateHuf) + '/év  ·  nominális: ' + fmtFull(fvEur);
 
         document.getElementById('val-diff').textContent = (realDiff >= 0 ? '+' : '') + fmtFull(realDiff);
-        document.getElementById('sub-diff').textContent = realDiff >= 0 ? 'EUR path ahead (real)' : 'HUF path ahead (real)';
-        document.getElementById('real-diff').textContent = 'Nominal: ' + (nomDiff >= 0 ? '+' : '') + fmtFull(nomDiff);
+        document.getElementById('sub-diff').textContent = realDiff >= 0 ? 'Az EUR út vezet (reál)' : 'A HUF út vezet (reál)';
+        document.getElementById('real-diff').textContent = 'Nominális: ' + (nomDiff >= 0 ? '+' : '') + fmtFull(nomDiff);
     } else {
         document.getElementById('val-huf').textContent  = fmtFull(fvHuf);
-        document.getElementById('sub-huf').textContent  = 'nominal future value';
-        document.getElementById('real-huf').textContent = 'Real value: ' + fmtFull(pvHuf) + '  ·  real rate: ' + pct(realHufRate) + '/yr';
+        document.getElementById('sub-huf').textContent  = 'nominális jövőérték';
+        document.getElementById('real-huf').textContent = 'Reálérték: ' + fmtFull(pvHuf) + '  ·  reálkamat: ' + pct(realHufRate) + '/év';
 
         document.getElementById('val-eur').textContent  = fmtFull(fvEur);
-        document.getElementById('sub-eur').textContent  = 'nominal future value (in HUF)';
-        document.getElementById('real-eur').textContent = 'Real value: ' + fmtFull(pvEur) + '  ·  real rate incl. FX: ' + pct(realEurRateHuf) + '/yr';
+        document.getElementById('sub-eur').textContent  = 'nominális jövőérték (HUF-ban)';
+        document.getElementById('real-eur').textContent = 'Reálérték: ' + fmtFull(pvEur) + '  ·  reálkamat (árfolyammal): ' + pct(realEurRateHuf) + '/év';
 
         document.getElementById('val-diff').textContent = (nomDiff >= 0 ? '+' : '') + fmtFull(nomDiff);
-        document.getElementById('sub-diff').textContent = nomDiff >= 0 ? 'EUR path ahead' : 'HUF path ahead';
-        document.getElementById('real-diff').textContent = 'Real: ' + (realDiff >= 0 ? '+' : '') + fmtFull(realDiff);
+        document.getElementById('sub-diff').textContent = nomDiff >= 0 ? 'Az EUR út vezet' : 'A HUF út vezet';
+        document.getElementById('real-diff').textContent = 'Reál: ' + (realDiff >= 0 ? '+' : '') + fmtFull(realDiff);
     }
 
     // Diff card colour
@@ -430,10 +427,10 @@ function calculate() {
     diffCard.className = 'result-card ' + ((showReal ? realDiff : nomDiff) >= 0 ? 'diff-pos' : 'diff-neg');
 
     // Chart
-    const labels = Array.from({ length: pts }, (_, i) => 'Yr ' + i);
+    const labels = Array.from({ length: pts }, (_, i) => i + '. év');
     document.getElementById('chart-title').textContent = showReal
-        ? 'Real value over time (in HUF, inflation-adjusted)'
-        : 'Nominal value over time (in HUF)';
+        ? 'Reálérték az évek során (HUF, inflációval korrigálva)'
+        : 'Nominális értékalakulás az évek során (HUF-ban)';
 
     const hufData = showReal ? hufReal : hufNom;
     const eurData = showReal ? eurReal : eurNom;
@@ -447,7 +444,7 @@ function calculate() {
             labels,
             datasets: [
                 {
-                    label: 'HUF bonds',
+                    label: 'HUF kötvény',
                     data: hufData,
                     borderColor: '#f97316',
                     backgroundColor: 'transparent',
@@ -458,7 +455,7 @@ function calculate() {
                     order: hufWinning ? 1 : 2,
                 },
                 {
-                    label: 'EUR bonds (in HUF)',
+                    label: 'EUR kötvény (HUF-ban)',
                     data: eurData,
                     borderColor: '#7c3aed',
                     backgroundColor: hufWinning ? 'rgba(249,115,22,0.08)' : 'rgba(124,58,237,0.08)',
