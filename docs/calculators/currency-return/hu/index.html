@@ -152,11 +152,11 @@
     <div class="container">
         <div class="meta">Személyes pénzügy · Kalkulátor</div>
         <h1>HUF vagy EUR — Hol dolgozzon a megtakarításod?</h1>
-        <p class="subtitle">A magyar állampapírok jelenleg lényegesen magasabb hozamot kínálnak, mint az eurós megfelelőik. Ugyanakkor az euró történelmileg erősödött a forinttal szemben. Ez a kalkulátor megmutatja, melyik út jár jobban — és hogy milyen árfolyamon fordulna meg az eredmény.</p>
+        <p class="subtitle">A magyar állampapírok jelenleg lényegesen magasabb hozamot kínálnak az eurós alternatíváknál. Az euró ugyanakkor az elmúlt évtizedben erősödött a forinttal szemben, és összességében biztonságosabb devizának tekinthető. Ez a kalkulátor megmutatja, melyik deviza tartása lehet kifizetődőbb — és hogy milyen árfolyamnál fordulna meg a mérleg.</p>
 
-        <p>Az alapvető dilemma: forintban tartod a megtakarításod és magasabb kamatot kapsz, vagy euróra váltasz, alacsonyabb kamattal, de esetleg profitálsz az árfolyam-erősödésből. Egyik sem egyértelműen jobb a másiknál — minden az EUR/HUF elmozdulásán múlik. A kalkulátor által meghatározott fedezeti árfolyam a kulcsszám: ha a saját becslésed e fölé esik, az eurós út nyer; ha alá, a forintos.</p>
+        <p>Az alapvető dilemma: forintban tartod a megtakarításod és élvezed a magasabb kamatot, vagy euróra váltasz, alacsonyabb hozamot elfogadva — cserébe esetleg nyersz az árfolyamon, és nagyobb biztonságban tudod a megtakarításaidat. Egyik sem egyértelműen jobb — minden az EUR/HUF jövőbeli mozgásán múlik.</p>
 
-        <p>Az EUR/HUF az elmúlt tíz évben átlagosan évi 2–3%-ot erősödött (kb. 310-ről 2015-ben ~403 Ft-ra 2025 májusában). A forint- és eurós kötvények közötti kamatrés jelenleg 4–5 százalékpont körül van. Ez a két erő ellentétes irányba húz — a kalkulátor ezt a feszültséget teszi láthatóvá.</p>
+        <p>Az EUR/HUF az elmúlt évtizedben átlagosan évi 2–3%-ot erősödött — kb. 310 Ft-ról 2015-ben ~403 Ft-ra 2025 tavaszán, majd onnan ~365 Ft-ra mérséklődött 2026-ra. A forint- és eurós kötvények közötti kamatrés jelenleg 4–5 százalékpont körül van. Ez a két erő ellentétes irányba húz — a kalkulátor ezt a feszültséget teszi láthatóvá.</p>
     </div>
 </div>
 
@@ -289,16 +289,16 @@
 <div class="how-it-works">
     <div class="container">
         <h2>A számítás menete</h2>
-        <p><strong>Forintos út:</strong> a kezdőösszeg a HUF kötvényhozam szerint kamatozik N éven át.</p>
-        <p><strong>Eurós út:</strong> a kezdőösszeget a jelenlegi árfolyamon euróra váltjuk, az EUR kötvényhozamon kamatozik N évig, majd a célárfolyamon visszaváltjuk forintra. A közbülső grafikonpontokhoz az árfolyamot mértani interpolációval számítjuk — az árfolyam folyamatosan, egyenletesen mozdul a jelenlegi szintről a célig.</p>
-        <p><strong>Fedezeti árfolyam:</strong> az az EUR/HUF szint, amelyen mindkét út ugyanolyan végső forintértéket ad. Levezetése: <em>P × (1 + r<sub>HUF</sub>)<sup>n</sup> = (P / árfolyam<sub>most</sub>) × (1 + r<sub>EUR</sub>)<sup>n</sup> × árfolyam<sub>fedezeti</sub></em>, amiből: <em>árfolyam<sub>fedezeti</sub> = árfolyam<sub>most</sub> × (1 + r<sub>HUF</sub>)<sup>n</sup> / (1 + r<sub>EUR</sub>)<sup>n</sup></em>.</p>
-        <p><strong>Reálértékek</strong> — mindkét utat a forint inflációjával korrigáljuk, mivel mindkettő forintban végződik. A kérdés ugyanaz: mennyit lehet ténylegesen vásárolni Magyarországon?</p>
+        <p><strong>Forintos út:</strong> a kezdőösszeg a megadott HUF kötvényhozamon kamatozik a teljes időtávon át.</p>
+        <p><strong>Eurós út:</strong> a kezdőösszeget a jelenlegi árfolyamon euróra váltjuk, az EUR kötvényhozamon kamatozik, majd a célárfolyamon visszaváltjuk forintra. A közbülső grafikonpontokhoz az árfolyamot mértani interpolációval becsüljük — az árfolyam egyenletesen halad a jelenlegi szintről a megadott célértékig.</p>
+        <p><strong>Fedezeti árfolyam:</strong> az az EUR/HUF szint, amelyen mindkét út ugyanakkora végső forintértéket ad. Levezetése: <em>P × (1 + r<sub>HUF</sub>)<sup>n</sup> = (P / árfolyam<sub>most</sub>) × (1 + r<sub>EUR</sub>)<sup>n</sup> × árfolyam<sub>fedezeti</sub></em>, amiből: <em>árfolyam<sub>fedezeti</sub> = árfolyam<sub>most</sub> × (1 + r<sub>HUF</sub>)<sup>n</sup> / (1 + r<sub>EUR</sub>)<sup>n</sup></em>.</p>
+        <p><strong>Reálértékek:</strong> mindkét utat a forint inflációjával korrigáljuk, mivel mindkettő forintban végződik. A kérdés ugyanaz: mennyit lehet ténylegesen vásárolni Magyarországon?</p>
         <p class="disclaimer">Az alapértelmezett értékek 2026. május körüli adatokon alapulnak. A forint kötvényhozam forrása a FixMÁP/MÁP+ (Államkincstár); az eurós kamat az EKB betéti rendelkezésre állás kamatláb (2,00%) és jellemző eurozónás megtakarítási számlák alapján; a forint infláció az MNB 2026-os előrejelzése (~3,2%); az EUR/HUF árfolyam: ~365 (2026. május); összehasonlításként: ~403 (2025. május), ~310 (2015). Az árfolyam-előrejelzések természetüknél fogva bizonytalanok — ez a kalkulátor forgatókönyv-elemző eszköz, nem jóslat. Nem minősül pénzügyi tanácsadásnak.</p>
     </div>
 </div>
 
 <footer>
-    Részese a <a href="../../../index.html">Personal Finance Toolkit</a>-nek ·
+    A <a href="../../../index.html">Personal Finance Toolkit</a> része ·
     <a href="https://github.com/mizsakpeti/personal-finance-toolkit">GitHub</a> ·
     Nem minősül pénzügyi tanácsadásnak.
 </footer>
