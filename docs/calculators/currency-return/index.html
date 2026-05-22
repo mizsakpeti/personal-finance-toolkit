@@ -30,6 +30,11 @@
         header .brand { font-weight: 700; font-size: 1rem; text-decoration: none; color: var(--text); margin-right: auto; }
         header a { color: var(--muted); text-decoration: none; font-size: 0.9rem; }
         header a:hover { color: var(--text); }
+        .lang-switch { display: flex; align-items: center; gap: 0.3rem; font-size: 0.85rem; }
+        .lang-switch a { color: var(--muted); text-decoration: none; padding: 0.2rem 0.4rem; border-radius: 4px; }
+        .lang-switch a:hover { color: var(--text); background: var(--bg); }
+        .lang-switch .current { font-weight: 700; color: var(--text); padding: 0.2rem 0.4rem; }
+        .lang-switch .sep { color: var(--border); }
 
         .container { max-width: 800px; margin: 0 auto; padding: 0 1.5rem; }
 
@@ -143,8 +148,12 @@
     <nav>
         <a href="../../index.html" class="brand">Personal Finance Toolkit</a>
         <a href="../../index.html">All tools</a>
-        <a href="hu/index.html">HU</a>
         <a href="https://github.com/mizsakpeti/personal-finance-toolkit">GitHub</a>
+        <div class="lang-switch">
+            <span class="current">EN</span>
+            <span class="sep">|</span>
+            <a href="hu/">HU</a>
+        </div>
     </nav>
 </header>
 

@@ -1,0 +1,1375 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kamatos kamat kalkulátor — Rendszeres megtakarítással vagyont építeni</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+            onload="renderMathInElement(document.getElementById('math-formulas'),{delimiters:[{left:'$$',right:'$$',display:true}]})"></script>
+    <style>
+        :root {
+            --blue:   #2563eb;
+            --green:  #16a34a;
+            --orange: #ea580c;
+            --text:   #111827;
+            --muted:  #6b7280;
+            --border: #e5e7eb;
+            --bg:     #f9fafb;
+            --white:  #ffffff;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: var(--text);
+            background: var(--bg);
+            line-height: 1.7;
+        }
+
+        /* ── Header ── */
+        header { background: var(--white); border-bottom: 1px solid var(--border); padding: 1rem 1.5rem; }
+        header nav { max-width: 800px; margin: 0 auto; display: flex; align-items: center; gap: 1.5rem; }
+        header .brand { font-weight: 700; font-size: 1rem; text-decoration: none; color: var(--text); margin-right: auto; }
+        header a { color: var(--muted); text-decoration: none; font-size: 0.9rem; }
+        header a:hover { color: var(--text); }
+
+        .container { max-width: 800px; margin: 0 auto; padding: 0 1.5rem; }
+
+        /* ── Article ── */
+        .article { background: var(--white); border-bottom: 1px solid var(--border); padding: 3.5rem 0 2.5rem; }
+        .article .meta { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--blue); margin-bottom: 0.75rem; }
+        .article h1 { font-size: 2.1rem; font-weight: 700; line-height: 1.2; margin-bottom: 0.6rem; }
+        .article .subtitle { color: var(--muted); font-size: 1.05rem; margin-bottom: 2.5rem; }
+        .article p { margin-bottom: 1.25rem; font-size: 1.03rem; }
+        .article blockquote {
+            border-left: 4px solid var(--blue);
+            padding: 0.85rem 1.25rem;
+            margin: 1.75rem 0;
+            background: #eff6ff;
+            border-radius: 0 8px 8px 0;
+            font-style: italic;
+            color: #1e40af;
+            font-size: 1.05rem;
+        }
+        .article .section-break { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+
+        /* ── TL;DR ── */
+        .tldr {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 1.1rem 1.25rem;
+            margin: 0 0 2rem;
+        }
+        .tldr .tldr-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--blue); margin-bottom: 0.55rem; }
+        .tldr ul { margin: 0 0 0.75rem 1.2rem; }
+        .tldr li { font-size: 0.95rem; color: #1e3a5f; margin-bottom: 0.35rem; line-height: 1.5; }
+        .tldr a { font-size: 0.88rem; font-weight: 600; color: var(--blue); text-decoration: none; }
+        .tldr a:hover { text-decoration: underline; }
+
+        /* ── Calculator ── */
+        .calculator { padding: 2.5rem 0; }
+        .calc-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 1.25rem; }
+
+        .presets { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 1.5rem; align-items: center; }
+        .presets-label { font-size: 0.8rem; color: var(--muted); font-weight: 500; }
+        .preset-btn {
+            padding: 0.35rem 0.85rem;
+            border: 1px solid var(--border);
+            background: var(--white);
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            color: var(--muted);
+            transition: all 0.15s;
+        }
+        .preset-btn:hover { border-color: var(--blue); color: var(--blue); background: #eff6ff; }
+        .preset-btn.active { border-color: var(--blue); color: var(--blue); background: #eff6ff; font-weight: 600; }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.85rem;
+            margin-bottom: 0.85rem;
+        }
+        @media (max-width: 580px) { .input-grid { grid-template-columns: 1fr; } }
+
+        .input-group {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.9rem 1.1rem;
+            transition: border-color 0.15s;
+        }
+        .input-group:focus-within { border-color: var(--blue); }
+        .input-group label {
+            display: block;
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--muted);
+            margin-bottom: 0.3rem;
+        }
+        .input-group .row { display: flex; align-items: baseline; gap: 0.4rem; }
+        .input-group input, .input-group select {
+            border: none;
+            outline: none;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text);
+            background: transparent;
+            width: 100%;
+            min-width: 0;
+        }
+        .input-group select { font-size: 1rem; cursor: pointer; }
+        .input-group .unit { font-size: 0.9rem; color: var(--muted); white-space: nowrap; flex-shrink: 0; }
+        .span-2 { grid-column: span 2; }
+        @media (max-width: 580px) { .span-2 { grid-column: span 1; } }
+
+        /* ── Allocation slider block ── */
+        .alloc-block {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem 1.1rem 1.1rem;
+            margin-bottom: 0.85rem;
+        }
+        .alloc-block .block-label {
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--muted);
+            margin-bottom: 0.75rem;
+        }
+        .yield-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+            margin-bottom: 0.85rem;
+        }
+        .yield-field { display: flex; flex-direction: column; gap: 0.2rem; }
+        .yield-field label { font-size: 0.78rem; color: var(--muted); font-weight: 500; }
+        .yield-input-row { display: flex; align-items: baseline; gap: 0.3rem; }
+        .yield-field input {
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.3rem 0.5rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text);
+            width: 80px;
+            outline: none;
+            transition: border-color 0.15s;
+        }
+        .yield-field input:focus { border-color: var(--blue); }
+        .yield-field .unit { font-size: 0.85rem; color: var(--muted); }
+
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.82rem;
+            color: var(--muted);
+            margin-bottom: 0.3rem;
+        }
+        .slider-labels .bond-lbl { color: var(--orange); font-weight: 600; }
+        .slider-labels .stock-lbl { color: var(--green); font-weight: 600; }
+        .slider-labels .split-info { font-weight: 600; color: var(--text); }
+
+        input[type="range"]#stockPct {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            outline: none;
+            cursor: pointer;
+            border: none;
+            background: linear-gradient(to right, var(--orange) 50%, var(--green) 50%);
+            margin: 0.4rem 0 0.6rem;
+        }
+        input[type="range"]#stockPct::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--white);
+            border: 2.5px solid var(--blue);
+            cursor: pointer;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+        }
+        input[type="range"]#stockPct::-moz-range-thumb {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--white);
+            border: 2.5px solid var(--blue);
+            cursor: pointer;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+        }
+
+        .blended-return {
+            font-size: 0.88rem;
+            color: var(--muted);
+            margin-bottom: 0.85rem;
+        }
+        .blended-return strong { color: var(--text); }
+
+        .alloc-presets { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .alloc-preset-btn {
+            padding: 0.25rem 0.7rem;
+            border: 1px solid var(--border);
+            background: var(--white);
+            border-radius: 16px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            color: var(--muted);
+            transition: all 0.15s;
+        }
+        .alloc-preset-btn:hover { border-color: var(--blue); color: var(--blue); background: #eff6ff; }
+        .alloc-preset-btn.active { border-color: var(--blue); color: var(--blue); background: #eff6ff; font-weight: 600; }
+
+        /* ── Scenario tabs ── */
+        .scenario-bar {
+            display: flex;
+            align-items: flex-end;
+            gap: 0;
+            margin-bottom: 1.25rem;
+            border-bottom: 2px solid var(--border);
+        }
+        .scenario-tab {
+            padding: 0.45rem 1.1rem;
+            border: 1px solid var(--border);
+            border-bottom: none;
+            background: var(--bg);
+            border-radius: 6px 6px 0 0;
+            cursor: pointer;
+            font-size: 0.88rem;
+            font-weight: 500;
+            color: var(--muted);
+            transition: all 0.15s;
+            position: relative;
+            bottom: -2px;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            margin-right: 3px;
+        }
+        .scenario-tab:hover { color: var(--text); background: var(--white); }
+        .scenario-tab.active {
+            background: var(--white);
+            color: var(--text);
+            font-weight: 700;
+            border-bottom: 2px solid var(--white);
+        }
+        .tab-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .add-scenario-btn {
+            padding: 0.35rem 0.75rem;
+            border: 1px dashed var(--border);
+            background: transparent;
+            border-radius: 6px 6px 0 0;
+            cursor: pointer;
+            font-size: 0.8rem;
+            color: var(--muted);
+            transition: all 0.15s;
+            margin-left: 0.5rem;
+            bottom: -2px;
+            position: relative;
+        }
+        .add-scenario-btn:hover { border-color: var(--blue); color: var(--blue); }
+
+        /* ── Scenario summary table ── */
+        .scenario-summary {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+            display: none;
+        }
+        .scenario-summary h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 1rem; }
+        .summary-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+        .summary-table th {
+            text-align: left;
+            padding: 0.35rem 0.75rem;
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--muted);
+            border-bottom: 1px solid var(--border);
+        }
+        .summary-table td { padding: 0.55rem 0.75rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        .summary-table tr:last-child td { border-bottom: none; }
+        .summary-table .sc-name { display: flex; align-items: center; gap: 0.5rem; font-weight: 600; }
+        .summary-table .sc-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+        .summary-table .final-val { font-weight: 700; }
+
+        /* ── Account type toggle ── */
+        .account-type-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        .account-type-label { font-size: 0.88rem; color: var(--muted); }
+        .account-opt {
+            padding: 0.35rem 0.85rem;
+            border: 1px solid var(--border);
+            background: var(--white);
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            color: var(--muted);
+            transition: all 0.15s;
+        }
+        .account-opt:hover { border-color: var(--blue); color: var(--blue); background: #eff6ff; }
+        .account-opt.active { border-color: var(--blue); color: var(--blue); background: #eff6ff; font-weight: 600; }
+
+        /* ── Chart mode switcher ── */
+        .chart-header {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            margin-bottom: 1.1rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .chart-header h3 { margin-bottom: 0; }
+        .chart-mode-tabs { display: flex; gap: 0.4rem; }
+        .chart-mode-btn {
+            padding: 0.22rem 0.6rem;
+            border: 1px solid var(--border);
+            background: var(--white);
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.78rem;
+            color: var(--muted);
+            transition: all 0.15s;
+        }
+        .chart-mode-btn:hover { border-color: var(--blue); color: var(--blue); }
+        .chart-mode-btn.active { border-color: var(--blue); color: var(--blue); background: #eff6ff; font-weight: 600; }
+
+        /* ── Toggles ── */
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+            cursor: pointer;
+            user-select: none;
+        }
+        .toggle { position: relative; display: inline-block; width: 42px; height: 22px; flex-shrink: 0; }
+        .toggle input { opacity: 0; width: 0; height: 0; }
+        .toggle-track {
+            position: absolute; inset: 0;
+            background: var(--border);
+            border-radius: 22px;
+            transition: background 0.2s;
+        }
+        .toggle-thumb {
+            position: absolute;
+            width: 16px; height: 16px;
+            left: 3px; top: 3px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.2s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        .toggle input:checked ~ .toggle-track { background: var(--blue); }
+        .toggle input:checked ~ .toggle-thumb { transform: translateX(20px); }
+
+        .calc-btn {
+            width: 100%;
+            padding: 0.85rem;
+            background: var(--blue);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s;
+            margin-bottom: 2rem;
+            margin-top: 0.25rem;
+        }
+        .calc-btn:hover { background: #1d4ed8; }
+
+        /* ── Results ── */
+        .results { display: none; animation: fadeIn 0.25s ease; }
+        .results.visible { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+        .result-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; margin-bottom: 1.25rem; }
+        @media (max-width: 580px) { .result-cards { grid-template-columns: 1fr; } }
+
+        .result-card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.1rem 1.25rem;
+        }
+        .result-card.highlight-green  { border-color: #bbf7d0; background: #f0fdf4; }
+        .result-card.highlight-orange { border-color: #fed7aa; background: #fff7ed; }
+        .result-card .r-label { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 0.2rem; }
+        .result-card .r-value { font-size: 1.35rem; font-weight: 700; line-height: 1.2; }
+        .result-card.highlight-green  .r-value { color: var(--green); }
+        .result-card.highlight-orange .r-value { color: var(--orange); }
+        .result-card .r-sub  { font-size: 0.78rem; color: var(--muted); margin-top: 0.25rem; }
+        .result-card .r-real { font-size: 0.82rem; color: var(--muted); margin-top: 0.35rem; border-top: 1px solid var(--border); padding-top: 0.35rem; }
+
+        .chart-wrap {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem 1.5rem 1rem;
+            margin-bottom: 1.25rem;
+        }
+        .chart-wrap h3 { font-size: 0.9rem; font-weight: 600; color: var(--muted); margin-bottom: 1.1rem; }
+
+        /* ── Cost-of-delay panel ── */
+        .delay-panel {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+        .delay-panel h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.15rem; }
+        .delay-panel .delay-subtitle { font-size: 0.82rem; color: var(--muted); margin-bottom: 1rem; }
+        .delay-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        .delay-table th { text-align: left; padding: 0.35rem 0.6rem; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); border-bottom: 1px solid var(--border); }
+        .delay-table td { padding: 0.5rem 0.6rem; border-bottom: 1px solid var(--border); }
+        .delay-table tr:last-child td { border-bottom: none; }
+        .delay-table .now-row td { font-weight: 700; color: var(--green); }
+        .delay-table .loss { color: var(--orange); font-weight: 600; }
+
+        /* ── Post-calculator ── */
+        .post-calc { padding: 2rem 0; }
+        .post-calc h2 { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.75rem; }
+        .post-calc p { margin-bottom: 1.1rem; font-size: 1.02rem; color: #374151; }
+        .post-calc ul { margin: 0 0 1.1rem 1.4rem; }
+        .post-calc li { font-size: 1.02rem; color: #374151; margin-bottom: 0.4rem; }
+        .post-calc a { color: var(--blue); }
+        .insight-box {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 8px;
+            padding: 1.1rem 1.25rem;
+            margin: 1.5rem 0;
+            font-size: 0.95rem;
+            color: #14532d;
+        }
+        .insight-box strong { display: block; margin-bottom: 0.3rem; font-size: 1rem; }
+
+        /* ── How it works ── */
+        .how-it-works { background: var(--white); border-top: 1px solid var(--border); padding: 2.5rem 0; }
+        .how-it-works h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.75rem; }
+        .how-it-works p { font-size: 0.92rem; color: var(--muted); margin-bottom: 0.85rem; }
+        .formula-box {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.75rem 1.25rem;
+            color: #374151;
+            margin: 0.85rem 0 1rem;
+            overflow-x: auto;
+        }
+        .formula-box .katex-display { margin: 0.6rem 0; }
+        .disclaimer { font-size: 0.82rem; color: var(--muted); border-top: 1px solid var(--border); padding-top: 1rem; margin-top: 0.5rem; }
+
+        /* ── Language switcher ── */
+        .lang-switch { display: flex; align-items: center; gap: 0.3rem; font-size: 0.85rem; margin-left: auto; }
+        .lang-switch a { color: var(--muted); text-decoration: none; padding: 0.2rem 0.4rem; border-radius: 4px; }
+        .lang-switch a:hover { color: var(--text); background: var(--bg); }
+        .lang-switch .current { font-weight: 700; color: var(--text); padding: 0.2rem 0.4rem; }
+        .lang-switch .sep { color: var(--border); }
+
+        /* ── Footer ── */
+        footer { padding: 1.5rem; text-align: center; font-size: 0.82rem; color: var(--muted); border-top: 1px solid var(--border); }
+        footer a { color: var(--muted); }
+    </style>
+</head>
+<body>
+
+<header>
+    <nav>
+        <a href="../../../index.html" class="brand">Personal Finance Toolkit</a>
+        <a href="../../../index.html">Összes eszköz</a>
+        <a href="https://github.com/mizsakpeti/personal-finance-toolkit">GitHub</a>
+        <div class="lang-switch">
+            <a href="../">EN</a>
+            <span class="sep">|</span>
+            <span class="current">HU</span>
+        </div>
+    </nav>
+</header>
+
+<!-- ── Bevezető szöveg ── -->
+<div class="article">
+    <div class="container">
+        <div class="meta">Személyes pénzügy · Kalkulátor</div>
+        <h1>A vagyon két tényezője: az idő és a rendszeresség</h1>
+        <p class="subtitle">Nem kell nagy összeg a befektetés megkezdéséhez. Kell egy rendszeres szokás és elegendő idő, hogy a kamatos kamat elvégezze a munkáját.</p>
+
+        <div class="tldr">
+            <div class="tldr-label">Röviden</div>
+            <ul>
+                <li>A rendszeres havi befizetések az évek során drámaian felhalmozódnak — még a szerényebb összegek is.</li>
+                <li>A korai kezdés fontosabb a nagy összegeknél. Az 5 éves késlekedés általában a végső portfólió 30–40%-ába kerül.</li>
+                <li>A díjak csendben erodálják a hozamot: 1,5%-os éves költség vs. 0,2%-os index ETF 20 év alatt akár több millió forintos különbséget jelent.</li>
+            </ul>
+            <a href="#calculator">↓ Ugrás a kalkulátorhoz</a>
+        </div>
+
+        <p>A befektetés elmaradásának leggyakoribb oka: „nincs elég pénzem a kezdéshez." Logikusan hangzik — és szinte mindig téves. A kamatos kamat matematikájához nincs szükség nagy kezdőtőkére. Csak két dolog kell: rendszeres befizetés és idő.</p>
+
+        <p>A gond az, hogy a kis összegek eleinte láthatatlanoknak tűnnek. Havi 30 000 forint félrerakása nem tűnik vagyonépítésnek — inkább egy kis átutalás, ami majd nem lesz igazán számottevő. A probléma az, hogy az intuíciónk lineáris növekedést vár, a kamatos kamat pedig nem az. Egy év után alig látszik a változás. Tíz év után félreismerhetetlen. Húsz év után olyan számokat látunk, amitől az ember azt kívánja: bárcsak hamarabb kezdte volna.</p>
+
+        <blockquote>„A legjobb időpont fát ültetni húsz évvel ezelőtt volt. A második legjobb: most."</blockquote>
+
+        <p>Ez a kalkulátor a felhalmozási szakaszt modellezi: mi történik, ha rendszeresen befizetsz, meghatározol egy portfólió-összetételt, és a kamatos kamatot dolgozni hagyod. Két szám valószínűleg meg fog lepni: mekkora hányada jött a végső értékből a növekedésből — nem a saját befizetéseidből —, és mennyibe kerül néhány évvel később kezdeni.</p>
+
+        <p>Egy megjegyzés az összetételről: a kötvény–részvény arány ugyanolyan mértékben befolyásolja az utad alakját, mint a célállomást. A kötvények stabilitást, a részvények hosszú távú növekedést biztosítanak. Egyik véglet sem megfelelő mindenki számára. Az összetétel-csúszka segít megtalálni a saját egyensúlyodat — és azonnal láthatod, hogyan hat a végeredményre.</p>
+
+        <hr class="section-break">
+    </div>
+</div>
+
+<!-- ── Kalkulátor ── -->
+<div class="calculator" id="calculator">
+    <div class="container">
+        <div class="calc-title">Készítsd el a befektetési projekciódat</div>
+
+        <!-- Forgatókönyv fülek -->
+        <div class="scenario-bar" id="scenario-bar">
+            <button class="scenario-tab active" id="tab-0" onclick="switchScenario(0)">
+                <span class="tab-dot" style="background:#2563eb"></span> A forgatókönyv
+            </button>
+            <button class="add-scenario-btn" id="add-scenario-btn" onclick="addScenario()">+ Forgatókönyv hozzáadása</button>
+        </div>
+
+        <div class="presets">
+            <span class="presets-label">Előbeállítás betöltése:</span>
+            <button class="preset-btn active" id="preset-hu" onclick="loadPreset('hu', this)">🇭🇺 Magyarország 2025</button>
+            <button class="preset-btn" id="preset-eu" onclick="loadPreset('eu', this)">🇪🇺 Eurózóna 2025</button>
+        </div>
+
+        <!-- Beviteli rács -->
+        <div class="input-grid">
+            <div class="input-group">
+                <label>Kiindulóösszeg</label>
+                <div class="row">
+                    <input type="text" id="startAmount" value="0" inputmode="numeric"
+                           style="flex:1;min-width:0;"
+                           onfocus="unformatAmount(this)"
+                           onblur="formatAmountDisplay(this); recalculate()"
+                           oninput="recalculate()">
+                    <select id="currency" oninput="recalculate()" style="width:auto;flex-shrink:0;">
+                        <option value="Ft" selected>Ft HUF</option>
+                        <option value="€">€ EUR</option>
+                        <option value="$">$ USD</option>
+                        <option value="£">£ GBP</option>
+                        <option value="CHF">CHF</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Havi befizetés</label>
+                <div class="row">
+                    <input type="text" id="monthlyContrib" value="30 000" inputmode="numeric"
+                           style="flex:1;min-width:0;"
+                           onfocus="unformatAmount(this)"
+                           onblur="formatAmountDisplay(this); recalculate()"
+                           oninput="recalculate()">
+                    <span class="unit" id="contrib-unit">Ft / hó</span>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Időtáv</label>
+                <div class="row">
+                    <input type="number" id="years" value="20" min="1" max="50" step="1" oninput="recalculate()">
+                    <span class="unit">év</span>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Éves befizetés-növekedés</label>
+                <div class="row">
+                    <input type="number" id="contribGrowth" value="0" min="0" max="20" step="0.5" oninput="recalculate()">
+                    <span class="unit">% / év</span>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Alapkezelési díj (éves)</label>
+                <div class="row">
+                    <input type="number" id="expenseRatio" value="0.5" min="0" max="5" step="0.1" oninput="onYieldChange()">
+                    <span class="unit">% / év</span>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Inflációs ráta</label>
+                <div class="row">
+                    <input type="number" id="inflationRate" value="4.5" min="0" max="30" step="0.1" oninput="recalculate()">
+                    <span class="unit">% / év</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Összetétel-csúszka -->
+        <div class="alloc-block">
+            <div class="block-label">Portfólió-összetétel és hozamok</div>
+
+            <div class="yield-row">
+                <div class="yield-field">
+                    <label>Kötvény hozam (éves)</label>
+                    <div class="yield-input-row">
+                        <input type="number" id="bondYield" value="6.5" min="0" max="30" step="0.1" oninput="onYieldChange()">
+                        <span class="unit">%</span>
+                    </div>
+                </div>
+                <div class="yield-field">
+                    <label>Részvény hozam (éves)</label>
+                    <div class="yield-input-row">
+                        <input type="number" id="stockYield" value="8.0" min="0" max="30" step="0.1" oninput="onYieldChange()">
+                        <span class="unit">%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slider-labels">
+                <span class="stock-lbl">Részvény <span id="stockPctDisplay">50</span>%</span>
+                <span class="split-info" id="blendedReturn">Keverék: 7,25% / év bruttó</span>
+                <span class="bond-lbl"><span id="bondPctDisplay">50</span>% Kötvény</span>
+            </div>
+            <input type="range" id="stockPct" min="0" max="100" value="50" oninput="onSliderChange()">
+
+            <div class="alloc-presets">
+                <span style="font-size:0.78rem;color:var(--muted);align-self:center;">Gyors beállítás:</span>
+                <button class="alloc-preset-btn" onclick="setAllocPreset(20, this)">Konzervatív (80/20)</button>
+                <button class="alloc-preset-btn active" onclick="setAllocPreset(50, this)">Kiegyensúlyozott (50/50)</button>
+                <button class="alloc-preset-btn" onclick="setAllocPreset(80, this)">Növekedési (20/80)</button>
+                <button class="alloc-preset-btn" onclick="setAllocPreset(100, this)">Csak részvény</button>
+            </div>
+        </div>
+
+        <!-- Kapcsolók -->
+        <label class="toggle-row" for="realToggle">
+            <span class="toggle">
+                <input type="checkbox" id="realToggle" onchange="recalculate()">
+                <span class="toggle-track"></span>
+                <span class="toggle-thumb"></span>
+            </span>
+            Megjelenítés mai vásárlóerőn (inflációval korrigálva)
+        </label>
+
+        <div class="account-type-row">
+            <span class="account-type-label">Számlatípus:</span>
+            <button class="account-opt active" id="btn-regular" onclick="setAccountType('regular')">Normál számla (15% SZJA)</button>
+            <button class="account-opt" id="btn-tbsz"    onclick="setAccountType('tbsz')">TBSZ (0% 5 év után)</button>
+        </div>
+
+        <button class="calc-btn" onclick="calculate()">Növekedés kiszámítása →</button>
+
+        <!-- Eredmények -->
+        <div class="results" id="results">
+
+            <div class="result-cards">
+                <div class="result-card highlight-green">
+                    <div class="r-label">Végső portfólióérték</div>
+                    <div class="r-value" id="val-final"></div>
+                    <div class="r-sub"  id="sub-final"></div>
+                    <div class="r-real" id="real-final"></div>
+                </div>
+                <div class="result-card">
+                    <div class="r-label">Összes befizetés</div>
+                    <div class="r-value" id="val-contrib"></div>
+                    <div class="r-sub"  id="sub-contrib"></div>
+                    <div class="r-real" id="real-contrib"></div>
+                </div>
+                <div class="result-card">
+                    <div class="r-label">Kamatnövekedés összesen</div>
+                    <div class="r-value" id="val-growth"></div>
+                    <div class="r-sub"  id="sub-growth"></div>
+                    <div class="r-real" id="real-growth"></div>
+                </div>
+                <div class="result-card highlight-orange">
+                    <div class="r-label">Díjveszteség (összköltség)</div>
+                    <div class="r-value" id="val-drag"></div>
+                    <div class="r-sub"  id="sub-drag"></div>
+                    <div class="r-real" id="real-drag"></div>
+                </div>
+            </div>
+
+            <!-- Fő diagram -->
+            <div class="chart-wrap">
+                <div class="chart-header">
+                    <h3 id="chart-title">Portfólióérték időben</h3>
+                    <div class="chart-mode-tabs">
+                        <button class="chart-mode-btn active" id="mode-portfolio"  onclick="setChartMode('portfolio')">Portfólióérték</button>
+                        <button class="chart-mode-btn"        id="mode-breakdown"  onclick="setChartMode('breakdown')">Befizetés-bontás</button>
+                    </div>
+                </div>
+                <canvas id="chart"></canvas>
+            </div>
+
+            <!-- A halogatás ára -->
+            <div class="delay-panel">
+                <h3>A halogatás ára</h3>
+                <p class="delay-subtitle">Mi lett volna, ha késel? Minden más paraméter változatlan marad.</p>
+                <table class="delay-table">
+                    <thead>
+                        <tr>
+                            <th>Mikor kezdesz</th>
+                            <th>Végső portfólió</th>
+                            <th>Különbség</th>
+                        </tr>
+                    </thead>
+                    <tbody id="delay-tbody">
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Forgatókönyv összehasonlítás (egynél több forgatókönyvnél jelenik meg) -->
+            <div class="scenario-summary" id="scenario-summary">
+                <h3>Forgatókönyv összehasonlítás</h3>
+                <table class="summary-table">
+                    <thead>
+                        <tr>
+                            <th>Forgatókönyv</th>
+                            <th>Végső portfólió</th>
+                            <th>Befizetés</th>
+                            <th>Növekedés</th>
+                            <th>Díjak</th>
+                            <th>Évek</th>
+                        </tr>
+                    </thead>
+                    <tbody id="summary-tbody"></tbody>
+                </table>
+            </div>
+
+        </div><!-- /results -->
+    </div>
+</div>
+
+<!-- ── Értelmezési útmutató ── -->
+<div class="post-calc">
+    <div class="container">
+        <h2>Hogyan értelmezd az eredményeket</h2>
+        <p>A <em>portfólió</em>-görbe és a <em>befizetések</em>-görbe közötti rés a kamatos kamat — a pénzed által keresett pénz. Az első években alig látszik. A félidő körül kezd felgyorsulni. 20–30 éves távon általában messze meghaladja azt, amit te magad fizettél be. Ezért számít annyira a korai kezdés — még kis összegekkel is.</p>
+
+        <p>A szaggatott vonal a <em>díjmentes ideális</em> görbe: mi lenne a portfóliód nulla díj esetén. A tömör és a szaggatott vonal közötti rés az, amit az éves alapkezelési díj csendben elvon az évek során. Az 1,5%-os éves díj csekélynek tűnik — annyi a különbség egy bankban értékesített aktívan kezelt alap és egy index ETF között. 20 éves távon egy szerény portfólión ez a rés általában több millió forintot tesz ki.</p>
+
+        <div class="insight-box">
+            <strong>A kamatos kamat meglepetése</strong>
+            Egy 20 éves időtávon, havi 30 000 Ft befizetéssel és 7%-os keverékhozammal a végső portfólióérték kb. 55–60%-a a kamatos kamatból ered — nem a befizetett összegből. Akik ezt először látják, általában nehezen hiszik el.
+        </div>
+
+        <h2>Mi a következő lépés?</h2>
+        <p>A kalkulátor két gyakorlati kérdést vet fel: mibe fektess, és hol tartsd?</p>
+        <ul>
+            <li><strong>Kötvények (HU):</strong> A PMÁP és a FIXMÁP közvetlenül elérhető az <a href="https://www.allampapir.hu" target="_blank" rel="noopener">allampapir.hu</a> oldalon. Vedd közvetlenül — ne bankon keresztül, ahol letétkezelési díj is terhel.</li>
+            <li><strong>Részvények / indexalapok:</strong> Az <a href="https://ibkr.com" target="_blank" rel="noopener">Interactive Brokers</a> vagy a <a href="https://lightyear.com" target="_blank" rel="noopener">Lightyear</a> platformokon elérhető, alacsony költségű MSCI World index ETF a magyar magánbefektetők körében népszerű választás. Mindkettő elérhető magyaroknak, minimális számlanyitási összeg nélkül.</li>
+            <li><strong>Számlatípus:</strong> Érdemes TBSZ-t (Tartós Befektetési Számlát) nyitni. Az 5 éves lekötési időszak után a hozamok teljesen adómentesek — ez hosszú távú portfóliók esetén érzékelhető előny.</li>
+        </ul>
+
+        <p>További olvasnivaló: a <a href="https://kiszamolo.hu" target="_blank" rel="noopener">Kiszámoló</a> közérthetően, zsargon nélkül foglalkozik a személyes pénzügyekkel — valószínűleg a legjobb kiindulópont azoknak, akik most ismerkednek a témával.</p>
+
+        <div class="insight-box">
+            <strong>Lásd még</strong>
+            Ha megtakarításaid egy része bankszámlán ül, nézd meg a <a href="../cash-opportunity-cost/hu/">Készpénztartás rejtett költsége kalkulátort</a> — megmutatja, mennyibe kerül a túl sok készpénz tartása, még mielőtt egyáltalán elkezdenéd a vagyonépítést.
+        </div>
+    </div>
+</div>
+
+<!-- ── A számítás menete ── -->
+<div class="how-it-works">
+    <div class="container">
+        <h2>Hogyan működik a számítás</h2>
+        <p>A portfólió havonta kamatozik. Minden hónapban az aktuális egyenleg megkapja az éves keverékhozam tizenkettedét, majd hozzáadódik a havi befizetés. Az éves befizetés-növekedést évente egyszer, az év végén alkalmazza a rendszer. A keverékhozam a kötvény- és részvényhozamok súlyozott átlaga, az éves alapkezelési díjjal csökkentve.</p>
+        <div class="formula-box" id="math-formulas">
+            $$r_{\text{keverék}} = w_{\text{kötvény}} \cdot r_{\text{kötvény}} + w_{\text{részvény}} \cdot r_{\text{részvény}}$$
+            $$r_{\text{nettó}} = r_{\text{keverék}} - r_{\text{díj}}$$
+            $$P_{m+1} = P_m \cdot \left(1 + \frac{r_{\text{nettó}}}{12}\right) + C_{\text{hónap}}$$
+            $$C_{\text{év}+1} = C_{\text{év}} \cdot (1 + g)$$
+            $$\text{Reálérték} = \frac{FV}{(1 + r_{\text{infláció}})^n}$$
+        </div>
+        <p>Ahol <em>w</em> a portfólió súlyok (összegük 1), <em>C</em> a havi befizetés, <em>g</em> az éves befizetés-növekedési ráta, és <em>n</em> az évek száma. A díjmentes ideális görbe <em>r</em><sub>keverék</sub>-et használ <em>r</em><sub>nettó</sub> helyett.</p>
+        <p class="disclaimer">Az előbeállított értékek a 2025-ös körülmények közelítő adatai. A magyar kötvényhozam a PMÁP / FIXMÁP termékeken alapul; a részvényhozam az MSCI World historikus nominális hozamán. Az eurózónás kötvényhozam az EU-s átlagos állampapírhozamokon alapul. Minden hozam adózás előtti, nominális — kivéve, ha az inflációs kapcsoló be van kapcsolva. A múltbeli hozamok nem garantálják a jövőbeli teljesítményt. Nem pénzügyi tanácsadás.</p>
+    </div>
+</div>
+
+<footer>
+    A <a href="../../../index.html">Personal Finance Toolkit</a> része ·
+    <a href="https://github.com/mizsakpeti/personal-finance-toolkit">GitHub</a> ·
+    Nem pénzügyi tanácsadás.
+</footer>
+
+<script>
+/* ── Formázó segédfüggvények ── */
+function formatAmountDisplay(el) {
+    const raw = parseFloat(el.value.replace(/\s/g, '').replace(',', '.'));
+    if (!isNaN(raw) && raw >= 0) el.value = Math.round(raw).toLocaleString('hu-HU').replace(/,/g, ' ');
+}
+function unformatAmount(el) {
+    el.value = el.value.replace(/\s/g, '');
+}
+function getFieldAmount(id) {
+    return parseFloat(document.getElementById(id).value.replace(/\s/g, '').replace(',', '.')) || 0;
+}
+function fmtFull(value, sym) {
+    const rounded = Math.round(value);
+    const formatted = Math.abs(rounded).toLocaleString('hu-HU').replace(/,/g, ' ');
+    const prefix = rounded < 0 ? '-' : '';
+    return sym === 'Ft' ? prefix + formatted + ' Ft' : prefix + sym + ' ' + formatted;
+}
+function fmtShort(value, sym) {
+    const abs = Math.abs(value);
+    const sign = value < 0 ? '-' : '';
+    let s;
+    if (abs >= 1e9)      s = (abs / 1e9).toFixed(1) + ' Mrd';
+    else if (abs >= 1e6) s = (abs / 1e6).toFixed(2) + ' M';
+    else if (abs >= 1e3) s = (abs / 1e3).toFixed(1) + ' E';
+    else                 s = Math.round(abs).toString();
+    return sym === 'Ft' ? sign + s + ' Ft' : sign + sym + ' ' + s;
+}
+function pct(v) { return v.toFixed(2) + '%'; }
+function setText(id, text) { document.getElementById(id).textContent = text; }
+
+/* ── Forgatókönyv színek ── */
+const SCENARIO_COLORS = [
+    { solid: '#2563eb', light: 'rgba(37,99,235,0.50)',  faint: 'rgba(37,99,235,0.25)',  area: 'rgba(37,99,235,0.08)' },
+    { solid: '#16a34a', light: 'rgba(22,163,74,0.50)',  faint: 'rgba(22,163,74,0.25)',  area: 'rgba(22,163,74,0.08)'  },
+    { solid: '#ea580c', light: 'rgba(234,88,12,0.50)',  faint: 'rgba(234,88,12,0.25)',  area: 'rgba(234,88,12,0.08)'  },
+];
+const SCENARIO_LABELS = ['A', 'B', 'C'];
+
+/* ── Forgatókönyv állapot ── */
+const DEFAULT_SCENARIO = {
+    currency: 'Ft', startAmount: 0, monthlyContrib: 30000, years: 20,
+    stockPct: 50, bondYield: 6.5, stockYield: 8.0,
+    expenseRatio: 0.5, contribGrowth: 0, inflationRate: 4.5,
+};
+let scenarios     = [{ ...DEFAULT_SCENARIO, name: 'A forgatókönyv' }];
+let scenarioCount = 1;
+let activeScenario = 0;
+
+/* ── Előbeállítások ── */
+const PRESETS = {
+    hu: { currency: 'Ft', startAmount: 0, monthlyContrib: 30000, years: 20,
+          bondYield: 6.5, stockYield: 8.0, bondPct: 50, expenseRatio: 0.5,
+          contribGrowth: 0, inflationRate: 4.5 },
+    eu: { currency: '€',  startAmount: 0, monthlyContrib: 300,   years: 20,
+          bondYield: 3.0, stockYield: 8.0, bondPct: 50, expenseRatio: 0.5,
+          contribGrowth: 0, inflationRate: 2.3 },
+};
+
+let chartInstance = null;
+let activePreset  = 'hu';
+let tbszMode      = false;
+let chartMode     = 'portfolio';
+
+function setAccountType(type) {
+    tbszMode = (type === 'tbsz');
+    document.getElementById('btn-regular').classList.toggle('active', !tbszMode);
+    document.getElementById('btn-tbsz').classList.toggle('active',  tbszMode);
+    if (document.getElementById('results').classList.contains('visible')) calculate();
+}
+
+function setChartMode(mode) {
+    chartMode = mode;
+    document.getElementById('mode-portfolio').classList.toggle('active', mode === 'portfolio');
+    document.getElementById('mode-breakdown').classList.toggle('active', mode === 'breakdown');
+    if (document.getElementById('results').classList.contains('visible')) calculate();
+}
+
+/* ── Forgatókönyv mentése / betöltése ── */
+function saveCurrentScenario() {
+    const spct = parseInt(document.getElementById('stockPct').value) || 50;
+    scenarios[activeScenario] = {
+        name:          scenarios[activeScenario].name,
+        currency:      document.getElementById('currency').value,
+        startAmount:   getFieldAmount('startAmount'),
+        monthlyContrib:getFieldAmount('monthlyContrib'),
+        years:         parseInt(document.getElementById('years').value)          || 20,
+        stockPct:      spct,
+        bondYield:     parseFloat(document.getElementById('bondYield').value)    || 0,
+        stockYield:    parseFloat(document.getElementById('stockYield').value)   || 0,
+        expenseRatio:  parseFloat(document.getElementById('expenseRatio').value) || 0,
+        contribGrowth: parseFloat(document.getElementById('contribGrowth').value)|| 0,
+        inflationRate: parseFloat(document.getElementById('inflationRate').value)|| 0,
+    };
+}
+
+function loadScenarioToDOM(idx) {
+    const s = scenarios[idx];
+    document.getElementById('currency').value = s.currency;
+    document.getElementById('startAmount').value = s.startAmount === 0 ? '0' :
+        Math.round(s.startAmount).toLocaleString('hu-HU').replace(/,/g, ' ');
+    document.getElementById('monthlyContrib').value =
+        Math.round(s.monthlyContrib).toLocaleString('hu-HU').replace(/,/g, ' ');
+    document.getElementById('years').value          = s.years;
+    document.getElementById('stockPct').value       = s.stockPct;
+    document.getElementById('bondYield').value      = s.bondYield;
+    document.getElementById('stockYield').value     = s.stockYield;
+    document.getElementById('expenseRatio').value   = s.expenseRatio;
+    document.getElementById('contribGrowth').value  = s.contribGrowth;
+    document.getElementById('inflationRate').value  = s.inflationRate;
+    document.getElementById('contrib-unit').textContent = s.currency + ' / hó';
+    updateSliderGradient(s.stockPct);
+    updateSliderLabels(s.stockPct);
+    updateBlendedReturn();
+}
+
+/* ── Forgatókönyv fül kezelés ── */
+function switchScenario(idx) {
+    saveCurrentScenario();
+    activeScenario = idx;
+    document.querySelectorAll('.scenario-tab').forEach((tab, i) =>
+        tab.classList.toggle('active', i === idx));
+    loadScenarioToDOM(idx);
+    if (document.getElementById('results').classList.contains('visible')) calculate();
+}
+
+function addScenario() {
+    if (scenarioCount >= 3) return;
+    saveCurrentScenario();
+    const newIdx = scenarioCount;
+    scenarios[newIdx] = {
+        ...scenarios[activeScenario],
+        name: SCENARIO_LABELS[newIdx] + ' forgatókönyv',
+    };
+    scenarioCount++;
+
+    // Új fül beillesztése a "+ Hozzáadás" gomb elé
+    const bar = document.getElementById('scenario-bar');
+    const addBtn = document.getElementById('add-scenario-btn');
+    const color = SCENARIO_COLORS[newIdx].solid;
+    const tab = document.createElement('button');
+    tab.className = 'scenario-tab';
+    tab.id = 'tab-' + newIdx;
+    tab.innerHTML = `<span class="tab-dot" style="background:${color}"></span> ${SCENARIO_LABELS[newIdx]} forgatókönyv`;
+    tab.onclick = () => switchScenario(newIdx);
+    bar.insertBefore(tab, addBtn);
+
+    if (scenarioCount >= 3) addBtn.style.display = 'none';
+    switchScenario(newIdx);
+}
+
+/* ── Előbeállítás betöltése ── */
+function loadPreset(key, btn) {
+    activePreset = key;
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const p = PRESETS[key];
+    const stockPct = 100 - p.bondPct;
+    document.getElementById('currency').value       = p.currency;
+    document.getElementById('startAmount').value    = p.startAmount === 0 ? '0' :
+        Math.round(p.startAmount).toLocaleString('hu-HU').replace(/,/g, ' ');
+    document.getElementById('monthlyContrib').value =
+        Math.round(p.monthlyContrib).toLocaleString('hu-HU').replace(/,/g, ' ');
+    document.getElementById('years').value          = p.years;
+    document.getElementById('bondYield').value      = p.bondYield;
+    document.getElementById('stockYield').value     = p.stockYield;
+    document.getElementById('stockPct').value       = stockPct;
+    document.getElementById('expenseRatio').value   = p.expenseRatio;
+    document.getElementById('contribGrowth').value  = p.contribGrowth;
+    document.getElementById('inflationRate').value  = p.inflationRate;
+    updateSliderGradient(stockPct);
+    updateSliderLabels(stockPct);
+    updateBlendedReturn();
+    document.getElementById('contrib-unit').textContent = p.currency + ' / hó';
+    calculate();
+}
+
+/* ── Csúszka és összetétel ── */
+function onSliderChange() {
+    const stockPct = parseInt(document.getElementById('stockPct').value);
+    activePreset = null;
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.alloc-preset-btn').forEach(b => b.classList.remove('active'));
+    updateSliderGradient(stockPct);
+    updateSliderLabels(stockPct);
+    updateBlendedReturn();
+    if (document.getElementById('results').classList.contains('visible')) calculate();
+}
+
+function onYieldChange() {
+    activePreset = null;
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+    updateBlendedReturn();
+    if (document.getElementById('results').classList.contains('visible')) calculate();
+}
+
+function setAllocPreset(stocks, btn) {
+    document.getElementById('stockPct').value = stocks;
+    document.querySelectorAll('.alloc-preset-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    activePreset = null;
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+    updateSliderGradient(stocks);
+    updateSliderLabels(stocks);
+    updateBlendedReturn();
+    if (document.getElementById('results').classList.contains('visible')) calculate();
+}
+
+function updateSliderGradient(stockPct) {
+    // Részvény (zöld) bal szélétől a csúszkáig; kötvény (narancs) csúszkától jobb széléig.
+    const sl = document.getElementById('stockPct');
+    sl.style.background =
+        `linear-gradient(to right, var(--green) 0%, var(--green) ${stockPct}%, var(--orange) ${stockPct}%, var(--orange) 100%)`;
+}
+
+function updateSliderLabels(stockPct) {
+    document.getElementById('stockPctDisplay').textContent = stockPct;
+    document.getElementById('bondPctDisplay').textContent  = 100 - stockPct;
+}
+
+function updateBlendedReturn() {
+    const stockPct  = parseInt(document.getElementById('stockPct').value) / 100;
+    const bondPct   = 1 - stockPct;
+    const bondYield = parseFloat(document.getElementById('bondYield').value)    || 0;
+    const stockYield= parseFloat(document.getElementById('stockYield').value)   || 0;
+    const expRatio  = parseFloat(document.getElementById('expenseRatio').value) || 0;
+    const gross     = bondPct * bondYield + stockPct * stockYield;
+    const net       = gross - expRatio;
+    document.getElementById('blendedReturn').innerHTML =
+        `<strong>${gross.toFixed(2)}% / év bruttó</strong> &nbsp;·&nbsp; ${net.toFixed(2)}% költségek után`;
+}
+
+function recalculate() {
+    activePreset = null;
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+    const sym = document.getElementById('currency').value;
+    document.getElementById('contrib-unit').textContent = sym + ' / hó';
+    if (document.getElementById('results').classList.contains('visible')) calculate();
+}
+
+/* ── Kalkulációs motor ── */
+function calcSeries(startAmount, monthlyContrib, bondPct, stockPct, bondYield, stockYield, expRatio, contribGrowth, years) {
+    const grossRate = (bondPct / 100) * (bondYield / 100) + (stockPct / 100) * (stockYield / 100);
+    const netRate   = grossRate - expRatio / 100;
+
+    const portfolioNet   = [startAmount];
+    const portfolioGross = [startAmount];
+    const contributions  = [startAmount];
+
+    let pNet   = startAmount;
+    let pGross = startAmount;
+    let contrib = monthlyContrib;
+    let totalContrib = startAmount;
+
+    for (let y = 1; y <= years; y++) {
+        for (let m = 0; m < 12; m++) {
+            pNet   = pNet   * (1 + netRate   / 12) + contrib;
+            pGross = pGross * (1 + grossRate  / 12) + contrib;
+            totalContrib += contrib;
+        }
+        contrib *= (1 + contribGrowth / 100);
+        portfolioNet.push(pNet);
+        portfolioGross.push(pGross);
+        contributions.push(totalContrib);
+    }
+    return { portfolioNet, portfolioGross, contributions };
+}
+
+/* ── Fő calculate() ── */
+function calculate() {
+    saveCurrentScenario();
+
+    const showReal  = document.getElementById('realToggle').checked;
+    const isTbsz    = tbszMode;
+    const activeSym = scenarios[activeScenario].currency;
+
+    const maxYears = Math.max(...scenarios.slice(0, scenarioCount).map(s => s.years));
+    const labels   = Array.from({ length: maxYears + 1 }, (_, i) => i + '. év');
+
+    const allDatasets    = [];
+    const summaryRows    = [];
+    let activeCardData   = null;
+    let activeSeriesData = null;
+
+    for (let si = 0; si < scenarioCount; si++) {
+        const sc    = scenarios[si];
+        const spct  = sc.stockPct;
+        const bpct  = 100 - spct;
+        const n     = sc.years;
+        const color = SCENARIO_COLORS[si];
+
+        const { portfolioNet, portfolioGross, contributions } =
+            calcSeries(sc.startAmount, sc.monthlyContrib, bpct, spct,
+                       sc.bondYield, sc.stockYield, sc.expenseRatio, sc.contribGrowth, n);
+
+        const deflator    = Array.from({ length: n + 1 }, (_, y) => Math.pow(1 + sc.inflationRate / 100, y));
+        const realNet     = portfolioNet.map((v, y) => v / deflator[y]);
+        const realGross   = portfolioGross.map((v, y) => v / deflator[y]);
+        const realContrib = contributions.map((v, y) => v / deflator[y]);
+
+        const padNull = arr => { const out = [...arr]; while (out.length <= maxYears) out.push(null); return out; };
+        const netData  = padNull(showReal ? realNet    : portfolioNet);
+        const ideaData = padNull(showReal ? realGross  : portfolioGross);
+        const contData = padNull(showReal ? realContrib : contributions);
+
+        const fvNet     = portfolioNet[n];
+        const fvGross   = portfolioGross[n];
+        const fvContrib = contributions[n];
+        const fvDrag    = fvGross - fvNet;
+        const fvGrowth  = fvNet - fvContrib;
+        const rvNet     = realNet[n];
+        const rvGross   = realGross[n];
+        const rvContrib = realContrib[n];
+        const rvDrag    = rvGross - rvNet;
+        const rvGrowth  = rvNet - rvContrib;
+
+        const gainsTax   = Math.max(0, fvGrowth)  * 0.15;
+        const tax        = isTbsz ? 0 : gainsTax;
+        const afterTax   = fvNet - tax;
+        const rvGainsTax = Math.max(0, rvGrowth) * 0.15;
+        const rvTax      = isTbsz ? 0 : rvGainsTax;
+        const rvAfterTax = rvNet - rvTax;
+
+        summaryRows.push({ name: sc.name, afterTax, fvContrib, fvGrowth, fvDrag, gainsTax,
+                           n, sym: sc.currency, color: color.solid });
+
+        if (si === activeScenario) {
+            activeCardData = { fvNet, fvGross, fvContrib, fvDrag, fvGrowth, afterTax, tax, gainsTax,
+                               rvNet, rvGross, rvContrib, rvDrag, rvGrowth, rvAfterTax, rvTax, rvGainsTax,
+                               n, sym: sc.currency, bpct, spct, sc };
+            activeSeriesData = { nomNet: portfolioNet, nomContrib: contributions,
+                                 realNet, realContrib, n, sym: sc.currency, name: sc.name };
+        }
+
+        if (scenarioCount === 1) {
+            allDatasets.push(
+                { label: 'Összes befizetés',              data: contData, borderColor: '#9ca3af',   borderWidth: 1.5, borderDash: [4,3], pointRadius: 0, fill: false,                                     tension: 0   },
+                { label: 'Díjmentes ideális (0% díj)',    data: ideaData, borderColor: color.light, borderWidth: 1.5, borderDash: [6,3], pointRadius: 0, fill: false,                                     tension: 0.3 },
+                { label: 'Portfóliód (díjak után)',       data: netData,  borderColor: color.solid, backgroundColor: color.area, borderWidth: 2.5, pointRadius: 0, fill: { target: 0, above: color.area }, tension: 0.3 }
+            );
+        } else {
+            allDatasets.push(
+                { label: sc.name + ': Befizetések',        data: contData, borderColor: color.faint, borderWidth: 1.5, borderDash: [4,3], pointRadius: 0, fill: false, tension: 0,   hideInLegend: true  },
+                { label: sc.name + ': Ideális (0% díj)',   data: ideaData, borderColor: color.light, borderWidth: 1.5, borderDash: [6,3], pointRadius: 0, fill: false, tension: 0.3, hideInLegend: true  },
+                { label: sc.name,                          data: netData,  borderColor: color.solid, borderWidth: 2.5,                   pointRadius: 0, fill: false, tension: 0.3, hideInLegend: false }
+            );
+        }
+    }
+
+    // ── Eredménykártyák (aktív forgatókönyv) ──
+    const { fvNet, fvGross, fvContrib, fvDrag, fvGrowth, afterTax, gainsTax,
+            rvNet, rvGross, rvContrib, rvDrag, rvGrowth, rvAfterTax, rvGainsTax,
+            n, sym } = activeCardData;
+
+    const dispFinal    = showReal ? rvAfterTax : afterTax;
+    const dispPreTax   = showReal ? rvNet      : fvNet;
+    const dispGainsTax = showReal ? rvGainsTax : gainsTax;
+
+    if (isTbsz) {
+        setText('val-final',  fmtFull(dispFinal, sym));
+        setText('sub-final',  'TBSZ — 0% tőkenyereség-adó');
+        setText('real-final', 'Megtakarított adó a normálhoz képest: ' + fmtFull(dispGainsTax, sym));
+    } else {
+        setText('val-final',  fmtFull(dispFinal, sym));
+        setText('sub-final',  showReal ? '15% SZJA után (reál)' : '15% SZJA után a nyereségen');
+        setText('real-final', 'Adózás előtt: ' + fmtFull(dispPreTax, sym) + '  ·  Adó: ' + fmtFull(dispGainsTax, sym));
+    }
+
+    if (showReal) {
+        setText('val-contrib', fmtFull(rvContrib, sym));
+        setText('sub-contrib', 'összes befizetett összeg (reál)');
+        setText('real-contrib','Nominális: ' + fmtFull(fvContrib, sym));
+        setText('val-growth',  fmtFull(rvGrowth, sym));
+        setText('sub-growth',  'kamatos kamat összesen (reál)');
+        setText('real-growth', 'A befizetések ' + pct(rvGrowth / rvContrib * 100) + '-a');
+        setText('val-drag',    fmtFull(rvDrag, sym));
+        setText('sub-drag',    'díjakra elveszett ' + n + ' év alatt (reál)');
+        setText('real-drag',   'Nominális díjveszteség: ' + fmtFull(fvDrag, sym));
+    } else {
+        setText('val-contrib', fmtFull(fvContrib, sym));
+        setText('sub-contrib', 'összes befizetett összeg ' + n + ' év alatt');
+        setText('real-contrib','Reálérték: ' + fmtFull(rvContrib, sym));
+        setText('val-growth',  fmtFull(fvGrowth, sym));
+        setText('sub-growth',  'kamatos kamat összesen');
+        setText('real-growth', 'Az összes befizetés ' + pct(fvGrowth / fvContrib * 100) + '-a');
+        setText('val-drag',    fmtFull(fvDrag, sym));
+        setText('sub-drag',    'díjakra elveszett ' + n + ' év alatt');
+        setText('real-drag',   'Reál díjveszteség: ' + fmtFull(rvDrag, sym));
+    }
+
+    // ── Diagram ──
+    if (chartInstance) chartInstance.destroy();
+
+    if (chartMode === 'breakdown') {
+        const asd       = activeSeriesData;
+        const brkLabels = Array.from({ length: asd.n + 1 }, (_, i) => i + '. év');
+        const brkCont   = showReal ? asd.realContrib : asd.nomContrib;
+        const brkNet    = showReal ? asd.realNet     : asd.nomNet;
+
+        document.getElementById('chart-title').textContent =
+            (scenarioCount > 1 ? asd.name + ': ' : '') +
+            'Befizetések vs. kamatnövekedés' +
+            (showReal ? ' (reál)' : '');
+
+        chartInstance = new Chart(document.getElementById('chart').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: brkLabels,
+                datasets: [
+                    {
+                        label: 'Saját befizetések',
+                        data: brkCont,
+                        fill: 'origin',
+                        backgroundColor: 'rgba(99,102,241,0.40)',
+                        borderColor:     'rgba(99,102,241,0.80)',
+                        borderWidth: 1.5,
+                        pointRadius: 0,
+                        tension: 0.3,
+                    },
+                    {
+                        label: 'Kamatos kamat',
+                        data: brkNet,
+                        fill: '-1',
+                        backgroundColor: 'rgba(22,163,74,0.40)',
+                        borderColor:     'rgba(22,163,74,0.80)',
+                        borderWidth: 1.5,
+                        pointRadius: 0,
+                        tension: 0.3,
+                    },
+                ],
+            },
+            options: {
+                responsive: true,
+                aspectRatio: 2.2,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { position: 'top', labels: { boxWidth: 14, font: { size: 12 } } },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => {
+                                const i = ctx.dataIndex;
+                                if (ctx.datasetIndex === 0) {
+                                    return '  Befizetések: ' + fmtFull(ctx.parsed.y, sym);
+                                }
+                                const growthAmt = ctx.parsed.y - (brkCont[i] || 0);
+                                return '  Kamatos kamat: ' + fmtFull(growthAmt, sym);
+                            },
+                        },
+                    },
+                },
+                scales: {
+                    x: { ticks: { maxTicksLimit: 11, font: { size: 11 } } },
+                    y: { ticks: { font: { size: 11 }, callback: v => fmtShort(v, sym) } },
+                },
+            },
+        });
+    } else {
+        document.getElementById('chart-title').textContent = showReal
+            ? 'Portfólióérték mai vásárlóerőn (inflációval korrigálva)'
+            : 'Nominális portfólióérték időben';
+
+        chartInstance = new Chart(document.getElementById('chart').getContext('2d'), {
+            type: 'line',
+            data: { labels, datasets: allDatasets },
+            options: {
+                responsive: true,
+                aspectRatio: 2.2,
+                spanGaps: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            boxWidth: 14,
+                            font: { size: 12 },
+                            filter: (item, chartData) => !chartData.datasets[item.datasetIndex].hideInLegend,
+                        },
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => {
+                                if (ctx.parsed.y === null) return null;
+                                return '  ' + ctx.dataset.label + ': ' + fmtFull(ctx.parsed.y, activeSym);
+                            },
+                        },
+                    },
+                },
+                scales: {
+                    x: { ticks: { maxTicksLimit: 11, font: { size: 11 } } },
+                    y: { ticks: { font: { size: 11 }, callback: v => fmtShort(v, activeSym) } },
+                },
+            },
+        });
+    }
+
+    // ── Forgatókönyv összehasonlító táblázat ──
+    const summaryEl = document.getElementById('scenario-summary');
+    if (scenarioCount > 1) {
+        const tbody = document.getElementById('summary-tbody');
+        tbody.innerHTML = '';
+        summaryRows.forEach(r => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><span class="sc-name"><span class="sc-dot" style="background:${r.color}"></span>${r.name}</span></td>
+                <td class="final-val">${fmtFull(r.afterTax, r.sym)}</td>
+                <td>${fmtFull(r.fvContrib, r.sym)}</td>
+                <td>${fmtFull(r.fvGrowth, r.sym)}</td>
+                <td>${fmtFull(r.fvDrag, r.sym)}</td>
+                <td>${r.n} év</td>`;
+            tbody.appendChild(tr);
+        });
+        summaryEl.style.display = 'block';
+    } else {
+        summaryEl.style.display = 'none';
+    }
+
+    // ── A halogatás ára (aktív forgatókönyv, adó után) ──
+    const { bpct, spct, sc } = activeCardData;
+    const baseVal = afterTax;
+    const dtbody  = document.getElementById('delay-tbody');
+    dtbody.innerHTML = '';
+    [0, 1, 3, 5].forEach(d => {
+        const effYears = Math.max(n - d, 0);
+        let finalVal = 0;
+        if (effYears > 0) {
+            const del = calcSeries(sc.startAmount, sc.monthlyContrib, bpct, spct,
+                sc.bondYield, sc.stockYield, sc.expenseRatio, sc.contribGrowth, effYears);
+            const raw        = del.portfolioNet[effYears];
+            const delGrowth  = raw - del.contributions[effYears];
+            const delTax     = isTbsz ? 0 : Math.max(0, delGrowth) * 0.15;
+            finalVal = raw - delTax;
+        }
+        const diff = finalVal - baseVal;
+        const isNow = d === 0;
+        const tr = document.createElement('tr');
+        if (isNow) tr.className = 'now-row';
+        const startLabel = isNow ? 'Most' : `${d} évvel később`;
+        const diffStr    = isNow ? '—' : `<span class="loss">-${fmtFull(Math.abs(diff), sym)}</span>`;
+        tr.innerHTML = `<td>${startLabel}</td><td>${fmtFull(finalVal, sym)}</td><td>${diffStr}</td>`;
+        dtbody.appendChild(tr);
+    });
+
+    document.getElementById('results').classList.add('visible');
+}
+
+// ── Inicializálás ──
+window.addEventListener('load', () => {
+    updateSliderGradient(50);
+    updateBlendedReturn();
+    calculate();
+});
+</script>
+
+</body>
+</html>
