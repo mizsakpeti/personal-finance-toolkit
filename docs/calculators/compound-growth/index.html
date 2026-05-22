@@ -232,6 +232,86 @@
         .alloc-preset-btn:hover { border-color: var(--blue); color: var(--blue); background: #eff6ff; }
         .alloc-preset-btn.active { border-color: var(--blue); color: var(--blue); background: #eff6ff; font-weight: 600; }
 
+        /* ── Scenario tabs ── */
+        .scenario-bar {
+            display: flex;
+            align-items: flex-end;
+            gap: 0;
+            margin-bottom: 1.25rem;
+            border-bottom: 2px solid var(--border);
+        }
+        .scenario-tab {
+            padding: 0.45rem 1.1rem;
+            border: 1px solid var(--border);
+            border-bottom: none;
+            background: var(--bg);
+            border-radius: 6px 6px 0 0;
+            cursor: pointer;
+            font-size: 0.88rem;
+            font-weight: 500;
+            color: var(--muted);
+            transition: all 0.15s;
+            position: relative;
+            bottom: -2px;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            margin-right: 3px;
+        }
+        .scenario-tab:hover { color: var(--text); background: var(--white); }
+        .scenario-tab.active {
+            background: var(--white);
+            color: var(--text);
+            font-weight: 700;
+            border-bottom: 2px solid var(--white);
+        }
+        .tab-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .add-scenario-btn {
+            padding: 0.35rem 0.75rem;
+            border: 1px dashed var(--border);
+            background: transparent;
+            border-radius: 6px 6px 0 0;
+            cursor: pointer;
+            font-size: 0.8rem;
+            color: var(--muted);
+            transition: all 0.15s;
+            margin-left: 0.5rem;
+            bottom: -2px;
+            position: relative;
+        }
+        .add-scenario-btn:hover { border-color: var(--blue); color: var(--blue); }
+
+        /* ── Scenario summary table ── */
+        .scenario-summary {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+            display: none;
+        }
+        .scenario-summary h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 1rem; }
+        .summary-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+        .summary-table th {
+            text-align: left;
+            padding: 0.35rem 0.75rem;
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--muted);
+            border-bottom: 1px solid var(--border);
+        }
+        .summary-table td { padding: 0.55rem 0.75rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        .summary-table tr:last-child td { border-bottom: none; }
+        .summary-table .sc-name { display: flex; align-items: center; gap: 0.5rem; font-weight: 600; }
+        .summary-table .sc-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+        .summary-table .final-val { font-weight: 700; }
+
         /* ── Toggles ── */
         .toggle-row {
             display: flex;
@@ -424,6 +504,14 @@
     <div class="container">
         <div class="calc-title">Build your investment projection</div>
 
+        <!-- Scenario tabs -->
+        <div class="scenario-bar" id="scenario-bar">
+            <button class="scenario-tab active" id="tab-0" onclick="switchScenario(0)">
+                <span class="tab-dot" style="background:#2563eb"></span> Scenario A
+            </button>
+            <button class="add-scenario-btn" id="add-scenario-btn" onclick="addScenario()">+ Add scenario</button>
+        </div>
+
         <div class="presets">
             <span class="presets-label">Load preset:</span>
             <button class="preset-btn active" id="preset-hu" onclick="loadPreset('hu', this)">🇭🇺 Hungary 2025</button>
@@ -517,9 +605,9 @@
             </div>
 
             <div class="slider-labels">
-                <span class="bond-lbl">Bonds <span id="bondPctDisplay">50</span>%</span>
+                <span class="stock-lbl">Stocks <span id="stockPctDisplay">50</span>%</span>
                 <span class="split-info" id="blendedReturn">Blended: 7.25% / yr</span>
-                <span class="stock-lbl"><span id="stockPctDisplay">50</span>% Stocks</span>
+                <span class="bond-lbl"><span id="bondPctDisplay">50</span>% Bonds</span>
             </div>
             <input type="range" id="stockPct" min="0" max="100" value="50" oninput="onSliderChange()">
 
@@ -594,6 +682,24 @@
                     </thead>
                     <tbody id="delay-tbody">
                     </tbody>
+                </table>
+            </div>
+
+            <!-- Scenario comparison (shown when >1 scenario) -->
+            <div class="scenario-summary" id="scenario-summary">
+                <h3>Scenario comparison</h3>
+                <table class="summary-table">
+                    <thead>
+                        <tr>
+                            <th>Scenario</th>
+                            <th>Final portfolio</th>
+                            <th>Contributed</th>
+                            <th>Growth</th>
+                            <th>Fee drag</th>
+                            <th>Years</th>
+                        </tr>
+                    </thead>
+                    <tbody id="summary-tbody"></tbody>
                 </table>
             </div>
 
@@ -683,6 +789,25 @@ function fmtShort(value, sym) {
     return sym === 'Ft' ? sign + s + ' Ft' : sign + sym + ' ' + s;
 }
 function pct(v) { return v.toFixed(2) + '%'; }
+function setText(id, text) { document.getElementById(id).textContent = text; }
+
+/* ── Scenario colors ── */
+const SCENARIO_COLORS = [
+    { solid: '#2563eb', light: 'rgba(37,99,235,0.50)',  faint: 'rgba(37,99,235,0.25)',  area: 'rgba(37,99,235,0.08)' },
+    { solid: '#16a34a', light: 'rgba(22,163,74,0.50)',  faint: 'rgba(22,163,74,0.25)',  area: 'rgba(22,163,74,0.08)'  },
+    { solid: '#ea580c', light: 'rgba(234,88,12,0.50)',  faint: 'rgba(234,88,12,0.25)',  area: 'rgba(234,88,12,0.08)'  },
+];
+const SCENARIO_LABELS = ['A', 'B', 'C'];
+
+/* ── Scenario state ── */
+const DEFAULT_SCENARIO = {
+    currency: 'Ft', startAmount: 0, monthlyContrib: 30000, years: 20,
+    stockPct: 50, bondYield: 6.5, stockYield: 8.0,
+    expenseRatio: 0.5, contribGrowth: 0, inflationRate: 4.5,
+};
+let scenarios     = [{ ...DEFAULT_SCENARIO, name: 'Scenario A' }];
+let scenarioCount = 1;
+let activeScenario = 0;
 
 /* ── Presets ── */
 const PRESETS = {
@@ -697,24 +822,98 @@ const PRESETS = {
 let chartInstance = null;
 let activePreset  = 'hu';
 
+/* ── Save / load scenario state ── */
+function saveCurrentScenario() {
+    const spct = parseInt(document.getElementById('stockPct').value) || 50;
+    scenarios[activeScenario] = {
+        name:          scenarios[activeScenario].name,
+        currency:      document.getElementById('currency').value,
+        startAmount:   getFieldAmount('startAmount'),
+        monthlyContrib:getFieldAmount('monthlyContrib'),
+        years:         parseInt(document.getElementById('years').value)          || 20,
+        stockPct:      spct,
+        bondYield:     parseFloat(document.getElementById('bondYield').value)    || 0,
+        stockYield:    parseFloat(document.getElementById('stockYield').value)   || 0,
+        expenseRatio:  parseFloat(document.getElementById('expenseRatio').value) || 0,
+        contribGrowth: parseFloat(document.getElementById('contribGrowth').value)|| 0,
+        inflationRate: parseFloat(document.getElementById('inflationRate').value)|| 0,
+    };
+}
+
+function loadScenarioToDOM(idx) {
+    const s = scenarios[idx];
+    document.getElementById('currency').value = s.currency;
+    document.getElementById('startAmount').value = s.startAmount === 0 ? '0' :
+        Math.round(s.startAmount).toLocaleString('hu-HU').replace(/,/g, ' ');
+    document.getElementById('monthlyContrib').value =
+        Math.round(s.monthlyContrib).toLocaleString('hu-HU').replace(/,/g, ' ');
+    document.getElementById('years').value          = s.years;
+    document.getElementById('stockPct').value       = s.stockPct;
+    document.getElementById('bondYield').value      = s.bondYield;
+    document.getElementById('stockYield').value     = s.stockYield;
+    document.getElementById('expenseRatio').value   = s.expenseRatio;
+    document.getElementById('contribGrowth').value  = s.contribGrowth;
+    document.getElementById('inflationRate').value  = s.inflationRate;
+    document.getElementById('contrib-unit').textContent = s.currency + ' / mo';
+    updateSliderGradient(s.stockPct);
+    updateSliderLabels(s.stockPct);
+    updateBlendedReturn();
+}
+
+/* ── Scenario tab management ── */
+function switchScenario(idx) {
+    saveCurrentScenario();
+    activeScenario = idx;
+    document.querySelectorAll('.scenario-tab').forEach((tab, i) =>
+        tab.classList.toggle('active', i === idx));
+    loadScenarioToDOM(idx);
+    if (document.getElementById('results').classList.contains('visible')) calculate();
+}
+
+function addScenario() {
+    if (scenarioCount >= 3) return;
+    saveCurrentScenario();
+    const newIdx = scenarioCount;
+    scenarios[newIdx] = {
+        ...scenarios[activeScenario],
+        name: 'Scenario ' + SCENARIO_LABELS[newIdx],
+    };
+    scenarioCount++;
+
+    // Insert new tab before the "+ Add" button
+    const bar = document.getElementById('scenario-bar');
+    const addBtn = document.getElementById('add-scenario-btn');
+    const color = SCENARIO_COLORS[newIdx].solid;
+    const tab = document.createElement('button');
+    tab.className = 'scenario-tab';
+    tab.id = 'tab-' + newIdx;
+    tab.innerHTML = `<span class="tab-dot" style="background:${color}"></span> Scenario ${SCENARIO_LABELS[newIdx]}`;
+    tab.onclick = () => switchScenario(newIdx);
+    bar.insertBefore(tab, addBtn);
+
+    if (scenarioCount >= 3) addBtn.style.display = 'none';
+    switchScenario(newIdx);
+}
+
+/* ── Preset loading ── */
 function loadPreset(key, btn) {
     activePreset = key;
     document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     const p = PRESETS[key];
-    document.getElementById('currency').value = p.currency;
-    document.getElementById('startAmount').value = p.startAmount === 0 ? '0' :
+    const stockPct = 100 - p.bondPct;
+    document.getElementById('currency').value       = p.currency;
+    document.getElementById('startAmount').value    = p.startAmount === 0 ? '0' :
         Math.round(p.startAmount).toLocaleString('hu-HU').replace(/,/g, ' ');
     document.getElementById('monthlyContrib').value =
         Math.round(p.monthlyContrib).toLocaleString('hu-HU').replace(/,/g, ' ');
-    document.getElementById('years').value         = p.years;
-    document.getElementById('bondYield').value     = p.bondYield;
-    document.getElementById('stockYield').value    = p.stockYield;
-    const stockPct = 100 - p.bondPct;
-    document.getElementById('stockPct').value      = stockPct;
-    document.getElementById('expenseRatio').value  = p.expenseRatio;
-    document.getElementById('contribGrowth').value = p.contribGrowth;
-    document.getElementById('inflationRate').value = p.inflationRate;
+    document.getElementById('years').value          = p.years;
+    document.getElementById('bondYield').value      = p.bondYield;
+    document.getElementById('stockYield').value     = p.stockYield;
+    document.getElementById('stockPct').value       = stockPct;
+    document.getElementById('expenseRatio').value   = p.expenseRatio;
+    document.getElementById('contribGrowth').value  = p.contribGrowth;
+    document.getElementById('inflationRate').value  = p.inflationRate;
     updateSliderGradient(stockPct);
     updateSliderLabels(stockPct);
     updateBlendedReturn();
@@ -754,24 +953,23 @@ function setAllocPreset(stocks, btn) {
 }
 
 function updateSliderGradient(stockPct) {
-    // Bonds (orange) fill from the left; stocks (green) fill from the right.
-    // bondPct = 100 - stockPct determines where the colour boundary sits.
-    const bondPct = 100 - stockPct;
+    // Stocks (green) fill left-to-thumb; bonds (orange) fill thumb-to-right.
+    // This keeps the thumb exactly at the colour boundary.
     const sl = document.getElementById('stockPct');
     sl.style.background =
-        `linear-gradient(to right, var(--orange) 0%, var(--orange) ${bondPct}%, var(--green) ${bondPct}%, var(--green) 100%)`;
+        `linear-gradient(to right, var(--green) 0%, var(--green) ${stockPct}%, var(--orange) ${stockPct}%, var(--orange) 100%)`;
 }
 
 function updateSliderLabels(stockPct) {
-    document.getElementById('bondPctDisplay').textContent  = 100 - stockPct;
     document.getElementById('stockPctDisplay').textContent = stockPct;
+    document.getElementById('bondPctDisplay').textContent  = 100 - stockPct;
 }
 
 function updateBlendedReturn() {
     const stockPct  = parseInt(document.getElementById('stockPct').value) / 100;
     const bondPct   = 1 - stockPct;
-    const bondYield = parseFloat(document.getElementById('bondYield').value)  || 0;
-    const stockYield= parseFloat(document.getElementById('stockYield').value) || 0;
+    const bondYield = parseFloat(document.getElementById('bondYield').value)    || 0;
+    const stockYield= parseFloat(document.getElementById('stockYield').value)   || 0;
     const expRatio  = parseFloat(document.getElementById('expenseRatio').value) || 0;
     const gross     = bondPct * bondYield + stockPct * stockYield;
     const net       = gross - expRatio;
@@ -782,7 +980,6 @@ function updateBlendedReturn() {
 function recalculate() {
     activePreset = null;
     document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
-    // Update contrib unit label on currency change
     const sym = document.getElementById('currency').value;
     document.getElementById('contrib-unit').textContent = sym + ' / mo';
     if (document.getElementById('results').classList.contains('visible')) calculate();
@@ -808,203 +1005,211 @@ function calcSeries(startAmount, monthlyContrib, bondPct, stockPct, bondYield, s
             pGross = pGross * (1 + grossRate  / 12) + contrib;
             totalContrib += contrib;
         }
-        // Apply annual contribution growth at year-end
         contrib *= (1 + contribGrowth / 100);
-
         portfolioNet.push(pNet);
         portfolioGross.push(pGross);
         contributions.push(totalContrib);
     }
-
     return { portfolioNet, portfolioGross, contributions };
 }
 
 /* ── Main calculate() ── */
 function calculate() {
-    const sym          = document.getElementById('currency').value;
-    const startAmount  = getFieldAmount('startAmount');
-    const monthlyContrib = getFieldAmount('monthlyContrib');
-    const years        = parseInt(document.getElementById('years').value);
-    const stockPct     = parseInt(document.getElementById('stockPct').value);
-    const bondPct      = 100 - stockPct;
-    const bondYield    = parseFloat(document.getElementById('bondYield').value)   || 0;
-    const stockYield   = parseFloat(document.getElementById('stockYield').value)  || 0;
-    const expRatio     = parseFloat(document.getElementById('expenseRatio').value)|| 0;
-    const contribGrowth= parseFloat(document.getElementById('contribGrowth').value)|| 0;
-    const inflRate     = parseFloat(document.getElementById('inflationRate').value)|| 0;
-    const showReal     = document.getElementById('realToggle').checked;
+    // Always capture current DOM into the active scenario first
+    saveCurrentScenario();
 
-    if (isNaN(years) || years < 1 || monthlyContrib < 0) return;
+    const showReal = document.getElementById('realToggle').checked;
+    const activeSym = scenarios[activeScenario].currency;
 
-    // Main series
-    const { portfolioNet, portfolioGross, contributions } =
-        calcSeries(startAmount, monthlyContrib, bondPct, stockPct, bondYield, stockYield, expRatio, contribGrowth, years);
+    // Chart x-axis spans the longest scenario horizon
+    const maxYears = Math.max(...scenarios.slice(0, scenarioCount).map(s => s.years));
+    const labels   = Array.from({ length: maxYears + 1 }, (_, i) => 'Yr ' + i);
 
-    // Inflation deflator
-    const pts = years + 1;
-    const deflator = Array.from({ length: pts }, (_, y) => Math.pow(1 + inflRate / 100, y));
+    const allDatasets = [];
+    const summaryRows = [];
+    let activeCardData = null;
 
-    const realNet   = portfolioNet.map((v, y) => v / deflator[y]);
-    const realGross = portfolioGross.map((v, y) => v / deflator[y]);
-    const realContrib = contributions.map((v, y) => v / deflator[y]);
+    for (let si = 0; si < scenarioCount; si++) {
+        const sc     = scenarios[si];
+        const spct   = sc.stockPct;
+        const bpct   = 100 - spct;
+        const n      = sc.years;
+        const color  = SCENARIO_COLORS[si];
 
-    // Final values
-    const fvNet    = portfolioNet[years];
-    const fvGross  = portfolioGross[years];
-    const fvContrib= contributions[years];
-    const fvDrag   = fvGross - fvNet;
-    const fvGrowth = fvNet - fvContrib;
+        const { portfolioNet, portfolioGross, contributions } =
+            calcSeries(sc.startAmount, sc.monthlyContrib, bpct, spct,
+                       sc.bondYield, sc.stockYield, sc.expenseRatio, sc.contribGrowth, n);
 
-    const rvNet    = realNet[years];
-    const rvGross  = realGross[years];
-    const rvContrib= realContrib[years];
-    const rvDrag   = rvGross - rvNet;
-    const rvGrowth = rvNet - rvContrib;
+        const deflator    = Array.from({ length: n + 1 }, (_, y) => Math.pow(1 + sc.inflationRate / 100, y));
+        const realNet     = portfolioNet.map((v, y) => v / deflator[y]);
+        const realGross   = portfolioGross.map((v, y) => v / deflator[y]);
+        const realContrib = contributions.map((v, y) => v / deflator[y]);
 
-    // ── Result cards ──
+        // Pad shorter scenarios with null so their lines end at their horizon
+        const padNull = arr => {
+            const out = [...arr];
+            while (out.length <= maxYears) out.push(null);
+            return out;
+        };
+        const netData  = padNull(showReal ? realNet    : portfolioNet);
+        const ideaData = padNull(showReal ? realGross  : portfolioGross);
+        const contData = padNull(showReal ? realContrib : contributions);
+
+        const fvNet     = portfolioNet[n];
+        const fvGross   = portfolioGross[n];
+        const fvContrib = contributions[n];
+        const fvDrag    = fvGross - fvNet;
+        const fvGrowth  = fvNet - fvContrib;
+        const rvNet     = realNet[n];
+        const rvGross   = realGross[n];
+        const rvContrib = realContrib[n];
+        const rvDrag    = rvGross - rvNet;
+        const rvGrowth  = rvNet - rvContrib;
+
+        summaryRows.push({ name: sc.name, fvNet, fvContrib, fvGrowth, fvDrag, n, sym: sc.currency, color: color.solid });
+
+        if (si === activeScenario) {
+            activeCardData = { fvNet, fvGross, fvContrib, fvDrag, fvGrowth,
+                               rvNet, rvGross, rvContrib, rvDrag, rvGrowth, n, sym: sc.currency,
+                               bpct, spct, sc };
+        }
+
+        if (scenarioCount === 1) {
+            // Single scenario: classic 3-line style with fill
+            allDatasets.push(
+                { label: 'Total contributed',        data: contData, borderColor: '#9ca3af',       borderWidth: 1.5, borderDash: [4,3], pointRadius: 0, fill: false,                                       tension: 0   },
+                { label: 'Cost-free ideal (no fees)',data: ideaData, borderColor: color.light,     borderWidth: 1.5, borderDash: [6,3], pointRadius: 0, fill: false,                                       tension: 0.3 },
+                { label: 'Your portfolio (after fees)',data: netData,borderColor: color.solid, backgroundColor: color.area, borderWidth: 2.5, pointRadius: 0, fill: { target: 0, above: color.area }, tension: 0.3 }
+            );
+        } else {
+            // Multi-scenario: per-colour lines; only portfolio line appears in legend
+            allDatasets.push(
+                { label: sc.name + ': Contributions',    data: contData, borderColor: color.faint, borderWidth: 1.5, borderDash: [4,3], pointRadius: 0, fill: false, tension: 0,   hideInLegend: true  },
+                { label: sc.name + ': Ideal (no fees)',  data: ideaData, borderColor: color.light, borderWidth: 1.5, borderDash: [6,3], pointRadius: 0, fill: false, tension: 0.3, hideInLegend: true  },
+                { label: sc.name,                        data: netData,  borderColor: color.solid, borderWidth: 2.5,                   pointRadius: 0, fill: false, tension: 0.3, hideInLegend: false }
+            );
+        }
+    }
+
+    // ── Result cards (active scenario) ──
+    const { fvNet, fvGross, fvContrib, fvDrag, fvGrowth,
+            rvNet, rvGross, rvContrib, rvDrag, rvGrowth,
+            n, sym } = activeCardData;
+
     if (showReal) {
         setText('val-final',   fmtFull(rvNet, sym));
         setText('sub-final',   'in today\'s purchasing power');
         setText('real-final',  'Nominal: ' + fmtFull(fvNet, sym));
-
         setText('val-contrib', fmtFull(rvContrib, sym));
         setText('sub-contrib', 'total deposited (real)');
         setText('real-contrib','Nominal: ' + fmtFull(fvContrib, sym));
-
         setText('val-growth',  fmtFull(rvGrowth, sym));
         setText('sub-growth',  'compound interest earned (real)');
         setText('real-growth', pct(rvGrowth / rvContrib * 100) + '% of contribution value');
-
         setText('val-drag',    fmtFull(rvDrag, sym));
-        setText('sub-drag',    'lost to fees over ' + years + ' years (real)');
+        setText('sub-drag',    'lost to fees over ' + n + ' years (real)');
         setText('real-drag',   'Nominal drag: ' + fmtFull(fvDrag, sym));
     } else {
         setText('val-final',   fmtFull(fvNet, sym));
-        setText('sub-final',   'nominal portfolio after ' + years + ' years');
+        setText('sub-final',   'nominal portfolio after ' + n + ' years');
         setText('real-final',  'Real (today\'s money): ' + fmtFull(rvNet, sym));
-
         setText('val-contrib', fmtFull(fvContrib, sym));
-        setText('sub-contrib', 'total deposited over ' + years + ' years');
+        setText('sub-contrib', 'total deposited over ' + n + ' years');
         setText('real-contrib','Real value: ' + fmtFull(rvContrib, sym));
-
         setText('val-growth',  fmtFull(fvGrowth, sym));
         setText('sub-growth',  'compound interest earned');
         setText('real-growth', pct(fvGrowth / fvContrib * 100) + '% of total contributions');
-
         setText('val-drag',    fmtFull(fvDrag, sym));
-        setText('sub-drag',    'lost to fees over ' + years + ' years');
+        setText('sub-drag',    'lost to fees over ' + n + ' years');
         setText('real-drag',   'Real drag: ' + fmtFull(rvDrag, sym));
     }
 
     // ── Chart ──
-    const labels = Array.from({ length: pts }, (_, i) => 'Yr ' + i);
-    const netData   = showReal ? realNet   : portfolioNet;
-    const grossData = showReal ? realGross : portfolioGross;
-    const contData  = showReal ? realContrib : contributions;
-
     document.getElementById('chart-title').textContent = showReal
         ? 'Portfolio value in today\'s purchasing power (inflation-adjusted)'
         : 'Nominal portfolio value over time';
 
-    const datasets = [
-        {
-            label: 'Total contributed',
-            data: contData,
-            borderColor: '#9ca3af',
-            borderWidth: 1.5,
-            borderDash: [4, 3],
-            pointRadius: 0,
-            fill: false,
-            tension: 0,
-            order: 3,
-        },
-        {
-            label: 'Cost-free ideal (no fees)',
-            data: grossData,
-            borderColor: 'rgba(37,99,235,0.45)',
-            borderWidth: 1.5,
-            borderDash: [6, 3],
-            pointRadius: 0,
-            fill: false,
-            tension: 0.3,
-            order: 2,
-        },
-        {
-            label: 'Your portfolio (after fees)',
-            data: netData,
-            borderColor: '#2563eb',
-            backgroundColor: 'rgba(37,99,235,0.08)',
-            borderWidth: 2.5,
-            pointRadius: 0,
-            fill: { target: 0, above: 'rgba(37,99,235,0.07)' },
-            tension: 0.3,
-            order: 1,
-        },
-    ];
-
     if (chartInstance) chartInstance.destroy();
     chartInstance = new Chart(document.getElementById('chart').getContext('2d'), {
         type: 'line',
-        data: { labels, datasets },
+        data: { labels, datasets: allDatasets },
         options: {
             responsive: true,
             aspectRatio: 2.2,
+            spanGaps: false,
             interaction: { mode: 'index', intersect: false },
             plugins: {
-                legend: { position: 'top', labels: { boxWidth: 14, font: { size: 12 } } },
+                legend: {
+                    position: 'top',
+                    labels: {
+                        boxWidth: 14,
+                        font: { size: 12 },
+                        filter: (item, chartData) =>
+                            !chartData.datasets[item.datasetIndex].hideInLegend,
+                    },
+                },
                 tooltip: {
                     callbacks: {
-                        label: ctx => '  ' + ctx.dataset.label + ': ' + fmtFull(ctx.parsed.y, sym),
-                    }
-                }
+                        label: ctx => {
+                            if (ctx.parsed.y === null) return null;
+                            return '  ' + ctx.dataset.label + ': ' + fmtFull(ctx.parsed.y, activeSym);
+                        },
+                    },
+                },
             },
             scales: {
                 x: { ticks: { maxTicksLimit: 11, font: { size: 11 } } },
-                y: {
-                    ticks: {
-                        font: { size: 11 },
-                        callback: v => fmtShort(v, sym),
-                    }
-                }
-            }
-        }
+                y: { ticks: { font: { size: 11 }, callback: v => fmtShort(v, activeSym) } },
+            },
+        },
     });
 
-    // ── Cost of starting later ──
+    // ── Scenario summary table (shown when >1 scenario) ──
+    const summaryEl = document.getElementById('scenario-summary');
+    if (scenarioCount > 1) {
+        const tbody = document.getElementById('summary-tbody');
+        tbody.innerHTML = '';
+        summaryRows.forEach(r => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><span class="sc-name"><span class="sc-dot" style="background:${r.color}"></span>${r.name}</span></td>
+                <td class="final-val">${fmtFull(r.fvNet, r.sym)}</td>
+                <td>${fmtFull(r.fvContrib, r.sym)}</td>
+                <td>${fmtFull(r.fvGrowth, r.sym)}</td>
+                <td>${fmtFull(r.fvDrag, r.sym)}</td>
+                <td>${r.n} yr</td>`;
+            tbody.appendChild(tr);
+        });
+        summaryEl.style.display = 'block';
+    } else {
+        summaryEl.style.display = 'none';
+    }
+
+    // ── Cost of starting later (active scenario) ──
+    const { bpct, spct, sc } = activeCardData;
     const delays = [0, 1, 3, 5];
     const baseVal = fvNet;
-    const tbody = document.getElementById('delay-tbody');
-    tbody.innerHTML = '';
-
+    const dtbody = document.getElementById('delay-tbody');
+    dtbody.innerHTML = '';
     delays.forEach(d => {
-        const effectiveYears = Math.max(years - d, 0);
+        const effYears = Math.max(n - d, 0);
         let finalVal = 0;
-        if (effectiveYears > 0) {
-            const delayed = calcSeries(startAmount, monthlyContrib, bondPct, stockPct,
-                bondYield, stockYield, expRatio, contribGrowth, effectiveYears);
-            finalVal = delayed.portfolioNet[effectiveYears];
+        if (effYears > 0) {
+            const del = calcSeries(sc.startAmount, sc.monthlyContrib, bpct, spct,
+                sc.bondYield, sc.stockYield, sc.expenseRatio, sc.contribGrowth, effYears);
+            finalVal = del.portfolioNet[effYears];
         }
         const diff = finalVal - baseVal;
         const isNow = d === 0;
         const tr = document.createElement('tr');
         if (isNow) tr.className = 'now-row';
-
         const startLabel = isNow ? 'Now' : `${d} year${d > 1 ? 's' : ''} later`;
-        const diffStr = isNow ? '—' :
-            `<span class="loss">-${fmtFull(Math.abs(diff), sym)}</span>`;
-
-        tr.innerHTML = `
-            <td>${startLabel}</td>
-            <td>${fmtFull(finalVal, sym)}</td>
-            <td>${diffStr}</td>`;
-        tbody.appendChild(tr);
+        const diffStr    = isNow ? '—' : `<span class="loss">-${fmtFull(Math.abs(diff), sym)}</span>`;
+        tr.innerHTML = `<td>${startLabel}</td><td>${fmtFull(finalVal, sym)}</td><td>${diffStr}</td>`;
+        dtbody.appendChild(tr);
     });
 
     document.getElementById('results').classList.add('visible');
-}
-
-function setText(id, text) {
-    document.getElementById(id).textContent = text;
 }
 
 // ── Init ──
