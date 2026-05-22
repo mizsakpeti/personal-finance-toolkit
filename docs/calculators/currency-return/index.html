@@ -394,7 +394,6 @@ function calculate() {
 
     // Breakeven box
     document.getElementById('be-rate').textContent = fmtRate(breakeven);
-    const historicalAvg = ((403 / 310) - 1) / 10; // ~2.6%/yr over 10y
     const beSubText = `EUR/HUF needs to rise ${pct(annualFxNeeded)}/yr for EUR path to break even. `
         + (rTarget >= breakeven
             ? `Your forecast (${fmtRate(rTarget)}) is above this → EUR path wins.`
