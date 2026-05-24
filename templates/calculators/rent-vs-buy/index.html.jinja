@@ -1,0 +1,436 @@
+{% extends "_calculator_base.html.jinja" %}
+
+{% set lang = "en" %}
+{% set use_katex = true %}
+{% set root = "../../" %}
+{% set nav_all_tools = "All tools" %}
+{% set footer_part_of = "Part of" %}
+{% set footer_disclaimer = "Not financial advice." %}
+
+{% block title %}Rent vs Buy Calculator — Should You Buy or Rent?{% endblock %}
+
+{% block extra_css_vars %}--green: #16a34a; --orange: #ea580c;{% endblock %}
+
+{% block page_css %}
+        .verdict-box {
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1.25rem;
+            text-align: center;
+        }
+        .verdict-box.buy { background: #f0fdf4; border: 2px solid #bbf7d0; }
+        .verdict-box.rent { background: #fff7ed; border: 2px solid #fed7aa; }
+        .verdict-box .verdict-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--muted);
+            margin-bottom: 0.4rem;
+        }
+        .verdict-box .verdict-value {
+            font-size: 1.6rem;
+            font-weight: 700;
+        }
+        .verdict-box.buy .verdict-value { color: var(--green); }
+        .verdict-box.rent .verdict-value { color: var(--orange); }
+        .verdict-box .verdict-detail {
+            font-size: 0.9rem;
+            color: var(--muted);
+            margin-top: 0.4rem;
+        }
+
+        .breakdown-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+        .breakdown-table th {
+            text-align: left;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--muted);
+            border-bottom: 1px solid var(--border);
+        }
+        .breakdown-table td {
+            padding: 0.6rem 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .breakdown-table tr:last-child td { border-bottom: none; }
+        .breakdown-table .row-label { color: var(--muted); }
+        .breakdown-table .row-value { font-weight: 600; text-align: right; }
+        .breakdown-table .row-pct { color: var(--muted); text-align: right; font-size: 0.82rem; }
+        .breakdown-table .total-row td { font-weight: 700; border-top: 2px solid var(--border); }
+{% endblock %}
+
+{% block lang_switch %}
+        <div class="lang-switch">
+            <span class="current">EN</span>
+            <span class="sep">|</span>
+            <a href="hu/">HU</a>
+        </div>
+{% endblock %}
+
+{% block content %}
+<!-- ── Opening narrative ── -->
+<div class="article">
+    <div class="container">
+        <div class="meta">Personal Finance · Calculator</div>
+        <h1>Rent or Buy: Which Makes More Financial Sense?</h1>
+        <p class="subtitle">A simple rule-based approach to determine the breakeven monthly rent — below which renting is cheaper than owning.</p>
+
+        <div class="tldr">
+            <div class="tldr-label">TL;DR</div>
+            <ul>
+                <li>Owning a home has hidden costs beyond the mortgage: property tax, maintenance, and the opportunity cost of your down payment.</li>
+                <li>The "simple rule" adds up all annual costs as a percentage of the home price, then converts to a monthly breakeven rent.</li>
+                <li>If you can rent for less than the breakeven, the math favors renting and investing the difference.</li>
+            </ul>
+            <a href="#calculator">↓ Jump to the calculator</a>
+        </div>
+
+        <p>The buy vs. rent question is one of the most emotionally charged decisions in personal finance. People on both sides have strong opinions — but the math is surprisingly straightforward once you separate the financial costs from the lifestyle preferences.</p>
+
+        <p>This calculator uses a simplified "cost of ownership" model. It totals up all the annual costs of owning a home — mortgage interest, property taxes, maintenance, and the opportunity cost of your locked-up equity — and compares that total against what you'd pay in rent. If rent is cheaper than the breakeven point, you'd be better off financially renting and investing the savings.</p>
+
+        <p>The key insight: your down payment doesn't just sit idle in a home — it could be earning returns elsewhere. That's the opportunity cost, and it's often the largest hidden expense of ownership that people overlook.</p>
+
+        <hr class="section-break">
+    </div>
+</div>
+
+<!-- ── Calculator ── -->
+<div class="calculator" id="calculator">
+    <div class="container">
+        <div class="calc-title">Find your breakeven rent</div>
+        <div class="calc-desc">Enter your home purchase details to calculate the monthly rent below which renting makes more financial sense.</div>
+
+        <!-- Input grid -->
+        <div class="input-grid">
+            <div class="input-group span-2">
+                <label>Home Price</label>
+                <div class="row">
+                    <input type="text" id="homePrice" value="100 000 000" inputmode="numeric"
+                           style="flex:1;min-width:0;"
+                           onfocus="unformatAmount(this)"
+                           onblur="formatAmountDisplay(this); recalculate()"
+                           oninput="recalculate()">
+                    <select id="currency" oninput="recalculate()" style="width:auto;flex-shrink:0;">
+                        <option value="Ft" selected>Ft HUF</option>
+                        <option value="€">€ EUR</option>
+                        <option value="$">$ USD</option>
+                        <option value="£">£ GBP</option>
+                        <option value="CHF">CHF</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Down Payment</label>
+                <div class="row">
+                    <input type="number" id="downPaymentPct" value="50" min="0" max="100" step="5" oninput="recalculate()">
+                    <span class="unit">%</span>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Mortgage Rate</label>
+                <div class="row">
+                    <input type="number" id="mortgageRate" value="6.0" min="0" max="30" step="0.1" oninput="recalculate()">
+                    <span class="unit">% / year</span>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Property Tax</label>
+                <div class="row">
+                    <input type="number" id="propertyTax" value="0" min="0" max="10" step="0.1" oninput="recalculate()">
+                    <span class="unit">% / year</span>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Maintenance Costs</label>
+                <div class="row">
+                    <input type="number" id="maintenance" value="1.0" min="0" max="10" step="0.1" oninput="recalculate()">
+                    <span class="unit">% / year</span>
+                </div>
+            </div>
+
+            <div class="input-group span-2">
+                <label>Opportunity Cost of Equity</label>
+                <div class="row">
+                    <input type="number" id="opportunityCost" value="4.0" min="0" max="20" step="0.5" oninput="recalculate()">
+                    <span class="unit">% / year</span>
+                </div>
+                <div class="hint">The net return you'd earn investing your down payment instead (investment return minus home appreciation)</div>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div class="results visible" id="results">
+
+            <!-- Verdict -->
+            <div class="verdict-box" id="verdict-box">
+                <div class="verdict-label">Breakeven Rent (per month)</div>
+                <div class="verdict-value" id="breakeven-value"></div>
+                <div class="verdict-detail" id="breakeven-detail"></div>
+            </div>
+
+            <!-- Result cards -->
+            <div class="result-cards">
+                <div class="result-card">
+                    <div class="r-label">Down Payment</div>
+                    <div class="r-value" id="val-downpayment"></div>
+                    <div class="r-sub" id="sub-downpayment"></div>
+                </div>
+                <div class="result-card">
+                    <div class="r-label">Loan Amount</div>
+                    <div class="r-value" id="val-loan"></div>
+                    <div class="r-sub" id="sub-loan"></div>
+                </div>
+                <div class="result-card">
+                    <div class="r-label">Annual Opportunity Cost</div>
+                    <div class="r-value" id="val-opportunity"></div>
+                    <div class="r-sub" id="sub-opportunity"></div>
+                </div>
+                <div class="result-card">
+                    <div class="r-label">Annual Interest Cost</div>
+                    <div class="r-value" id="val-interest"></div>
+                    <div class="r-sub" id="sub-interest"></div>
+                </div>
+            </div>
+
+            <!-- Breakdown table -->
+            <div class="chart-wrap">
+                <h3>Annual cost breakdown</h3>
+                <table class="breakdown-table">
+                    <thead>
+                        <tr>
+                            <th>Component</th>
+                            <th style="text-align:right">% of Home Value</th>
+                            <th style="text-align:right">Annual Cost</th>
+                        </tr>
+                    </thead>
+                    <tbody id="breakdown-tbody">
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Chart -->
+            <div class="chart-wrap">
+                <h3>Cost components as % of home value</h3>
+                <canvas id="chart"></canvas>
+            </div>
+
+        </div><!-- /results -->
+    </div>
+</div>
+
+<!-- ── Post-calculator narrative ── -->
+<div class="post-calc">
+    <div class="container">
+        <h2>How to interpret this</h2>
+        <p>The <strong>breakeven rent</strong> is the monthly rent amount at which buying and renting cost exactly the same. If you can rent a comparable property for <em>less</em> than this number, renting is the better financial choice — you'll save money each month that can be invested to grow your wealth.</p>
+
+        <p>If comparable rents are <em>higher</em> than the breakeven, buying makes more sense financially — you're effectively paying less in ownership costs than you would in rent.</p>
+
+        <div class="insight-box">
+            <strong>What about home appreciation?</strong>
+            The opportunity cost parameter already accounts for this. It represents the <em>difference</em> between what your money could earn invested elsewhere and what the home appreciates in value. A 4% opportunity cost means: your investments would return ~8% while the home appreciates ~4%.
+        </div>
+
+        <h2>Key assumptions</h2>
+        <ul>
+            <li>This uses straight-line interest (not amortized). It's a simplification that works well for comparing scenarios but slightly overstates early-year costs for long-term mortgages.</li>
+            <li>The model assumes you'd invest your down payment in a comparable-risk asset if you didn't buy.</li>
+            <li>Transaction costs (closing costs, agent fees) are not included — they'd make buying slightly less favorable for shorter holding periods.</li>
+        </ul>
+
+        <div class="insight-box">
+            <strong>Also see</strong>
+            Use the <a href="../compound-growth/">Compound Growth Calculator</a> to model what your down payment could grow into if invested over the same timeframe.
+        </div>
+    </div>
+</div>
+
+<!-- ── How it works ── -->
+<div class="how-it-works">
+    <div class="container">
+        <h2>How the calculation works</h2>
+        <p>The model computes the total annual cost of owning a home as a percentage of the property value, then converts that to a monthly breakeven rent.</p>
+        <div class="formula-box" id="math-formulas">
+            $$\text{Cost of Equity (\%)} = \frac{\text{Down Payment} \times \text{Opportunity Cost Rate}}{\text{Home Price}}$$
+            $$\text{Cost of Debt (\%)} = \frac{\text{Loan Amount} \times \text{Mortgage Rate}}{\text{Home Price}}$$
+            $$\text{Simple Rule} = \text{Property Tax} + \text{Maintenance} + \text{Cost of Equity} + \text{Cost of Debt}$$
+            $$\text{Breakeven Rent / Month} = \frac{\text{Home Price} \times \text{Simple Rule}}{12}$$
+        </div>
+        <p>Where the "Simple Rule" is the sum of all annual ownership costs expressed as a percentage of the home's value. The breakeven rent is that annual cost divided by 12.</p>
+        <p class="disclaimer">This is a simplified model for quick comparison. Actual costs vary based on mortgage amortization schedules, tax deductions, insurance, HOA fees, and local market conditions. Not financial advice.</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+/* ── Formatting helpers ── */
+function formatAmountDisplay(el) {
+    const raw = parseFloat(el.value.replace(/\s/g, '').replace(',', '.'));
+    if (!isNaN(raw) && raw >= 0) el.value = Math.round(raw).toLocaleString('hu-HU').replace(/,/g, ' ');
+}
+function unformatAmount(el) {
+    el.value = el.value.replace(/\s/g, '');
+}
+function getFieldAmount(id) {
+    return parseFloat(document.getElementById(id).value.replace(/\s/g, '').replace(',', '.')) || 0;
+}
+function fmtFull(value, sym) {
+    const rounded = Math.round(value);
+    const formatted = Math.abs(rounded).toLocaleString('hu-HU').replace(/,/g, ' ');
+    const prefix = rounded < 0 ? '-' : '';
+    return sym === 'Ft' ? prefix + formatted + ' Ft' : prefix + sym + ' ' + formatted;
+}
+function fmtShort(value, sym) {
+    const abs = Math.abs(value);
+    const sign = value < 0 ? '-' : '';
+    let s;
+    if (abs >= 1e9)      s = (abs / 1e9).toFixed(1) + ' B';
+    else if (abs >= 1e6) s = (abs / 1e6).toFixed(2) + ' M';
+    else if (abs >= 1e3) s = (abs / 1e3).toFixed(1) + ' K';
+    else                 s = Math.round(abs).toString();
+    return sym === 'Ft' ? sign + s + ' Ft' : sign + sym + ' ' + s;
+}
+function setText(id, text) { document.getElementById(id).textContent = text; }
+
+let chartInstance = null;
+
+function recalculate() {
+    calculate();
+}
+
+function calculate() {
+    const sym = document.getElementById('currency').value;
+    const homePrice = getFieldAmount('homePrice');
+    const downPaymentPct = parseFloat(document.getElementById('downPaymentPct').value) || 0;
+    const mortgageRate = parseFloat(document.getElementById('mortgageRate').value) || 0;
+    const propertyTax = parseFloat(document.getElementById('propertyTax').value) || 0;
+    const maintenance = parseFloat(document.getElementById('maintenance').value) || 0;
+    const opportunityCost = parseFloat(document.getElementById('opportunityCost').value) || 0;
+
+    // Core calculations
+    const downPayment = homePrice * (downPaymentPct / 100);
+    const loanAmount = homePrice - downPayment;
+    const annualInterest = loanAmount * (mortgageRate / 100);
+    const annualOpportunity = downPayment * (opportunityCost / 100);
+
+    // As percentage of home value
+    const costOfEquityPct = (downPaymentPct / 100) * opportunityCost;
+    const costOfDebtPct = ((100 - downPaymentPct) / 100) * mortgageRate;
+    const simpleRule = propertyTax + maintenance + costOfEquityPct + costOfDebtPct;
+    const breakevenMonthly = homePrice * (simpleRule / 100) / 12;
+
+    // Update verdict
+    const verdictBox = document.getElementById('verdict-box');
+    verdictBox.className = 'verdict-box rent';
+    document.getElementById('breakeven-value').textContent = fmtFull(breakevenMonthly, sym);
+    document.getElementById('breakeven-detail').textContent =
+        'If you can rent for less than this, renting is financially better. Annual cost: ' + simpleRule.toFixed(2) + '% of home value.';
+
+    // Result cards
+    setText('val-downpayment', fmtFull(downPayment, sym));
+    setText('sub-downpayment', downPaymentPct + '% of home price');
+    setText('val-loan', fmtFull(loanAmount, sym));
+    setText('sub-loan', (100 - downPaymentPct) + '% financed');
+    setText('val-opportunity', fmtFull(annualOpportunity, sym));
+    setText('sub-opportunity', costOfEquityPct.toFixed(2) + '% of home value');
+    setText('val-interest', fmtFull(annualInterest, sym));
+    setText('sub-interest', costOfDebtPct.toFixed(2) + '% of home value');
+
+    // Breakdown table
+    const tbody = document.getElementById('breakdown-tbody');
+    const annualPropertyTax = homePrice * (propertyTax / 100);
+    const annualMaintenance = homePrice * (maintenance / 100);
+    const totalAnnual = annualPropertyTax + annualMaintenance + annualOpportunity + annualInterest;
+
+    tbody.innerHTML = '';
+    const rows = [
+        ['Property Tax', propertyTax, annualPropertyTax],
+        ['Maintenance', maintenance, annualMaintenance],
+        ['Opportunity Cost of Equity', costOfEquityPct, annualOpportunity],
+        ['Mortgage Interest (Cost of Debt)', costOfDebtPct, annualInterest],
+    ];
+    rows.forEach(([label, pct, cost]) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td class="row-label">${label}</td><td class="row-pct">${pct.toFixed(2)}%</td><td class="row-value">${fmtFull(cost, sym)}</td>`;
+        tbody.appendChild(tr);
+    });
+    // Total row
+    const totalTr = document.createElement('tr');
+    totalTr.className = 'total-row';
+    totalTr.innerHTML = `<td><strong>Total (Simple Rule)</strong></td><td class="row-pct"><strong>${simpleRule.toFixed(2)}%</strong></td><td class="row-value">${fmtFull(totalAnnual, sym)}</td>`;
+    tbody.appendChild(totalTr);
+
+    // Chart
+    const tc = getChartColors();
+    if (chartInstance) chartInstance.destroy();
+
+    chartInstance = new Chart(document.getElementById('chart').getContext('2d'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Property Tax', 'Maintenance', 'Opportunity Cost', 'Mortgage Interest'],
+            datasets: [{
+                data: [propertyTax, maintenance, costOfEquityPct, costOfDebtPct],
+                backgroundColor: [
+                    'rgba(234, 88, 12, 0.7)',
+                    'rgba(99, 102, 241, 0.7)',
+                    'rgba(22, 163, 74, 0.7)',
+                    'rgba(37, 99, 235, 0.7)',
+                ],
+                borderColor: [
+                    'rgba(234, 88, 12, 1)',
+                    'rgba(99, 102, 241, 1)',
+                    'rgba(22, 163, 74, 1)',
+                    'rgba(37, 99, 235, 1)',
+                ],
+                borderWidth: 1,
+            }],
+        },
+        options: {
+            responsive: true,
+            aspectRatio: 2,
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: { color: tc.legend, font: { size: 12 }, padding: 16 },
+                },
+                tooltip: {
+                    backgroundColor: tc.tooltipBg,
+                    titleColor: tc.tooltipText,
+                    bodyColor: tc.tooltipText,
+                    borderColor: tc.tooltipBorder,
+                    borderWidth: 1,
+                    callbacks: {
+                        label: function(ctx) {
+                            const pctVal = ctx.parsed.toFixed(2);
+                            const annual = homePrice * (ctx.parsed / 100);
+                            return ` ${ctx.label}: ${pctVal}% (${fmtFull(annual, sym)}/yr)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    document.getElementById('results').classList.add('visible');
+}
+
+// ── Init ──
+window.addEventListener('load', () => {
+    calculate();
+});
+</script>
+{% endblock %}
