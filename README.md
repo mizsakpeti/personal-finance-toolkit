@@ -13,11 +13,17 @@ This toolkit helps you:
 
 ## Features
 
-### 1. Expense Categorizer
+### Web Calculators
+
+Interactive financial calculators served via [GitHub Pages](https://mizsakpeti.github.io/personal-finance-toolkit/). All available in English and Hungarian.
+
+- **Cash Opportunity Cost** — see what keeping too much in savings is actually costing you
+- **HUF vs EUR Returns** — compare currency-denominated investment paths
+- **Compound Growth & Monthly SIP** — project how regular contributions compound over time
+
+### Expense Categorizer (CLI)
 
 Automatically categorizes bank statement transactions using configurable keyword matching.
-
-**Key Features:**
 
 - Keyword-based categorization
 - Support for CSV and Excel files
@@ -78,7 +84,109 @@ The `examples/` directory contains:
 - `sample_bank_statement.csv` - Sample Hungarian bank statement
 - `categories_config.yaml` - Example category configuration
 
+## Adding a new calculator
+
+The site uses Jinja2 templates rendered at build time. Templates use a two-level inheritance hierarchy:
+
+```
+templates/
+  _base.html.jinja                  # HTML skeleton, CSS reset, variables
+  _calculator_base.html.jinja       # Shared calculator CSS, Chart.js/KaTeX, nav, footer
+  index.html.jinja                  # Landing page (lists all calculators manually)
+  calculators/
+    <name>/
+      index.html.jinja              # English version
+      hu/index.html.jinja           # Hungarian version (optional)
+```
+
+### Steps
+
+1. **Create the template** at `templates/calculators/<your-calculator>/index.html.jinja`:
+
+   ```jinja
+   {% set lang = "en" %}
+   {% set use_katex = false %}
+   {% set root = "../../" %}
+   {% set nav_all_tools = "All tools" %}
+   {% set footer_part_of = "Part of" %}
+   {% set footer_disclaimer = "Not financial advice." %}
+   {% extends "_calculator_base.html.jinja" %}
+
+   {% block title %}Your Calculator Title{% endblock %}
+
+   {% block lang_switch %}
+           <div class="lang-switch">
+               <span class="current">EN</span>
+               <span class="sep">|</span>
+               <a href="hu/">HU</a>
+           </div>
+   {% endblock %}
+
+   {% block page_css %}
+           /* page-specific CSS here */
+   {% endblock %}
+
+   {% block content %}
+   <div class="article">
+       <div class="container">
+           <div class="meta">Calculator</div>
+           <h1>Your Calculator Title</h1>
+           <p class="subtitle">Short description.</p>
+       </div>
+   </div>
+   <div class="calculator">
+       <div class="container">
+           <!-- inputs, results, charts -->
+       </div>
+   </div>
+   {% endblock %}
+
+   {% block scripts %}
+   <script>
+   function calculate() {
+       // your logic
+   }
+   </script>
+   {% endblock %}
+   ```
+
+   Set `use_katex = true` if you need math formula rendering.
+
+2. **Add a card to the landing page** in `templates/index.html.jinja`:
+
+   ```jinja
+   <a href="calculators/<your-calculator>/" class="card">
+       <span class="tag tag-web">Calculator</span>
+       <h3>Your Calculator Title</h3>
+       <p>Short description of what it does.</p>
+       <span class="arrow">Open calculator →</span>
+   </a>
+   ```
+
+3. **Build and verify:**
+
+   ```bash
+   uv run python scripts/build.py
+   open docs/calculators/<your-calculator>/index.html
+   ```
+
+4. **Commit both `templates/` and `docs/`** — CI checks that `docs/` stays in sync.
+
+### Adding a Hungarian version
+
+Create `templates/calculators/<your-calculator>/hu/index.html.jinja` with `lang = "hu"`, `root = "../../../"`, and Hungarian text. Update both EN and HU `lang_switch` blocks to link to each other.
+
+### Customizing styles
+
+`_calculator_base.html.jinja` exposes many override blocks for fine-tuning per page (e.g. `article_padding`, `result_cards_cols`, `calc_title_mb`, `extra_css_vars`). See the file for the full list.
+
 ## Development
+
+### Build the site
+
+```bash
+uv run python scripts/build.py    # render templates/ → docs/
+```
 
 ### Run Tests
 
