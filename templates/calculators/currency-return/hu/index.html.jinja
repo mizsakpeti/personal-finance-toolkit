@@ -337,6 +337,7 @@ function calculate() {
     diffCard.className = 'result-card ' + ((showReal ? realDiff : nomDiff) >= 0 ? 'diff-pos' : 'diff-neg');
 
     // Chart
+    const tc = getChartColors();
     const labels = Array.from({ length: pts }, (_, i) => i + '. év');
     document.getElementById('chart-title').textContent = showReal
         ? 'Reálérték az évek során (HUF, inflációval korrigálva)'
@@ -382,16 +383,18 @@ function calculate() {
             aspectRatio: 2.2,
             interaction: { mode: 'index', intersect: false },
             plugins: {
-                legend: { position: 'top', labels: { boxWidth: 14, font: { size: 12 } } },
+                legend: { position: 'top', labels: { boxWidth: 14, font: { size: 12 }, color: tc.legend } },
                 tooltip: {
+                    backgroundColor: tc.tooltipBg, titleColor: tc.tooltipText, bodyColor: tc.tooltipText,
+                    borderColor: tc.tooltipBorder, borderWidth: 1,
                     callbacks: {
                         label: ctx => '  ' + ctx.dataset.label + ': ' + fmtFull(ctx.parsed.y),
                     }
                 }
             },
             scales: {
-                x: { ticks: { maxTicksLimit: 10, font: { size: 11 } } },
-                y: { ticks: { font: { size: 11 }, callback: v => fmtShort(v) } }
+                x: { grid: { color: tc.grid }, ticks: { maxTicksLimit: 10, font: { size: 11 }, color: tc.tick } },
+                y: { grid: { color: tc.grid }, ticks: { font: { size: 11 }, color: tc.tick, callback: v => fmtShort(v) } }
             }
         }
     });

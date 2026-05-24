@@ -342,6 +342,7 @@ function calculate() {
     }
 
     // Chart
+    const tc = getChartColors();
     const labels = Array.from({ length: pts }, (_, i) => 'Yr ' + i);
 
     document.getElementById('chart-title').textContent = showReal
@@ -354,7 +355,7 @@ function calculate() {
             {
                 label: 'Starting amount',
                 data: startLine,
-                borderColor: '#d1d5db',
+                borderColor: tc.startLine,
                 borderWidth: 1,
                 borderDash: [4, 4],
                 pointRadius: 0,
@@ -419,21 +420,21 @@ function calculate() {
             aspectRatio: 2.2,
             interaction: { mode: 'index', intersect: false },
             plugins: {
-                legend: { position: 'top', labels: { boxWidth: 14, font: { size: 12 } } },
+                legend: { position: 'top', labels: { boxWidth: 14, font: { size: 12 }, color: tc.legend } },
                 tooltip: {
+                    backgroundColor: tc.tooltipBg,
+                    titleColor: tc.tooltipText,
+                    bodyColor: tc.tooltipText,
+                    borderColor: tc.tooltipBorder,
+                    borderWidth: 1,
                     callbacks: {
                         label: ctx => '  ' + ctx.dataset.label + ': ' + fmtFull(ctx.parsed.y, sym),
                     }
                 }
             },
             scales: {
-                x: { ticks: { maxTicksLimit: 10, font: { size: 11 } } },
-                y: {
-                    ticks: {
-                        font: { size: 11 },
-                        callback: v => fmtShort(v, sym),
-                    }
-                }
+                x: { grid: { color: tc.grid }, ticks: { maxTicksLimit: 10, font: { size: 11 }, color: tc.tick } },
+                y: { grid: { color: tc.grid }, ticks: { font: { size: 11 }, color: tc.tick, callback: v => fmtShort(v, sym) } }
             }
         }
     });
