@@ -1,37 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Personal Finance Toolkit</title>
-    <style>
-        :root {
-            --blue: #2563eb;
-            --text: #111827;
-            --muted: #6b7280;
-            --border: #e5e7eb;
-            --bg: #f9fafb;
-            --white: #ffffff;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            color: var(--text);
-            background: var(--bg);
-            line-height: 1.6;
-        }
+{% extends "_base.html.jinja" %}
+{% set lang = "en" %}
+{% block title %}Personal Finance Toolkit{% endblock %}
 
-        /* -- Header -- */
-        header { background: var(--white); border-bottom: 1px solid var(--border); padding: 1rem 1.5rem; }
-        header .inner { max-width: 800px; margin: 0 auto; display: flex; align-items: center; gap: 1.5rem; }
-        header .brand { font-weight: 700; font-size: 1rem; text-decoration: none; color: var(--text); }
-        header a { color: var(--muted); text-decoration: none; font-size: 0.9rem; }
-        header a:hover { color: var(--text); }
-
-        /* -- Footer -- */
-        footer { padding: 1.5rem; text-align: center; font-size: 0.85rem; color: var(--muted); border-top: 1px solid var(--border); }
-        footer a { color: var(--muted); }
-
+{% block styles %}
         .hero { background: var(--white); padding: 4rem 1.5rem 3rem; border-bottom: 1px solid var(--border); }
         .hero .inner { max-width: 800px; margin: 0 auto; }
         .hero h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.75rem; }
@@ -69,17 +40,18 @@
         .card h3 { font-size: 1rem; font-weight: 600; margin-bottom: 0.35rem; }
         .card p { font-size: 0.9rem; color: var(--muted); }
         .card .arrow { display: inline-block; margin-top: 1rem; font-size: 0.875rem; color: var(--blue); font-weight: 500; }
-    </style>
-</head>
-<body>
+{% endblock %}
 
+{% block header %}
 <header>
     <div class="inner">
         <a href="index.html" class="brand">Personal Finance Toolkit</a>
         <a href="https://github.com/mizsakpeti/personal-finance-toolkit">GitHub</a>
     </div>
 </header>
+{% endblock %}
 
+{% block content %}
 <div class="hero">
     <div class="inner">
         <h1>Personal Finance Toolkit</h1>
@@ -122,11 +94,10 @@
         </a>
     </div>
 </div>
+{% endblock %}
 
+{% block footer %}
 <footer>
     <a href="https://github.com/mizsakpeti/personal-finance-toolkit">Personal Finance Toolkit</a> · Not financial advice.
 </footer>
-
-
-</body>
-</html>
+{% endblock %}
