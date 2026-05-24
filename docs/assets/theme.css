@@ -1,0 +1,140 @@
+html.dark {
+    --text: #f9fafb;
+    --muted: #9ca3af;
+    --border: #374151;
+    --bg: #111827;
+    --white: #1f2937;
+    --blue: #3b82f6;
+    --green: #22c55e;
+    --orange: #fb923c;
+    --purple: #a78bfa;
+}
+
+.theme-toggle {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.2rem 0.45rem;
+    cursor: pointer;
+    font-size: 1.05rem;
+    color: var(--muted);
+    transition: border-color 0.15s, color 0.15s;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+}
+.theme-toggle:hover {
+    border-color: var(--blue);
+    color: var(--text);
+}
+
+/* Blockquote */
+html.dark .article blockquote {
+    background: rgba(59, 130, 246, 0.12);
+    color: #93c5fd;
+}
+
+/* TL;DR box */
+html.dark .tldr {
+    background: rgba(59, 130, 246, 0.12);
+    border-color: rgba(59, 130, 246, 0.25);
+}
+html.dark .tldr li {
+    color: #93c5fd;
+}
+
+/* Pill buttons hover & active */
+html.dark .preset-btn:hover,
+html.dark .preset-btn.active,
+html.dark .alloc-preset-btn:hover,
+html.dark .alloc-preset-btn.active,
+html.dark .chart-mode-btn.active,
+html.dark .account-opt:hover,
+html.dark .account-opt.active {
+    background: rgba(59, 130, 246, 0.15);
+}
+
+/* Calculate button hover */
+html.dark .calc-btn:hover {
+    background: #2563eb;
+}
+
+/* Post-calc text */
+html.dark .post-calc p,
+html.dark .post-calc li {
+    color: #d1d5db;
+}
+
+/* Insight box */
+html.dark .insight-box {
+    background: rgba(34, 197, 94, 0.12);
+    border-color: rgba(34, 197, 94, 0.25);
+    color: #86efac;
+}
+
+/* Formula box */
+html.dark .formula-box {
+    color: #d1d5db;
+}
+
+/* Result card highlights */
+html.dark .result-card.highlight {
+    border-color: rgba(251, 146, 60, 0.3);
+    background: rgba(251, 146, 60, 0.12);
+}
+html.dark .result-card.highlight-green {
+    border-color: rgba(34, 197, 94, 0.3);
+    background: rgba(34, 197, 94, 0.12);
+}
+html.dark .result-card.highlight-orange {
+    border-color: rgba(251, 146, 60, 0.3);
+    background: rgba(251, 146, 60, 0.12);
+}
+
+/* Index page tags */
+html.dark .tag-web {
+    background: rgba(59, 130, 246, 0.15);
+}
+html.dark .tag-cli {
+    background: rgba(34, 197, 94, 0.15);
+    color: #86efac;
+}
+
+/* Card hover */
+html.dark .card:hover {
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+}
+
+/* Breakeven box (currency-return) */
+html.dark .breakeven-box {
+    background: rgba(124, 58, 237, 0.12);
+    border-color: rgba(124, 58, 237, 0.25);
+    color: #c4b5fd;
+}
+
+/* Currency-return result cards */
+html.dark .result-card.eur .r-value {
+    color: #a78bfa;
+}
+
+/* Toggle thumb */
+html.dark .toggle-thumb {
+    background: #e5e7eb;
+}
+
+/* Select dropdowns */
+html.dark .input-group select option {
+    background: var(--white);
+    color: var(--text);
+}
+
+/* Range slider thumb */
+html.dark input[type="range"]#stockPct::-webkit-slider-thumb {
+    background: #e5e7eb;
+}
+html.dark input[type="range"]#stockPct::-moz-range-thumb {
+    background: #e5e7eb;
+}
+
+/* KaTeX */
+html.dark .katex { color: #d1d5db; }

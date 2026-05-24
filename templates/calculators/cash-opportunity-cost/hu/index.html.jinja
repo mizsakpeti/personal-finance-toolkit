@@ -339,6 +339,7 @@ function calculate() {
         document.getElementById('real-cost').textContent    = 'Reális elmaradt hozam: ' + fmtFull(realCost, sym);
     }
 
+    const tc = getChartColors();
     const labels = Array.from({ length: pts }, (_, i) => i + '. év');
     document.getElementById('chart-title').textContent = showReal
         ? 'Mai vásárlóerőn (inflációval korrigálva)'
@@ -347,7 +348,7 @@ function calculate() {
     let datasets;
     if (showReal) {
         datasets = [
-            { label: 'Induló összeg', data: startLine, borderColor: '#d1d5db', borderWidth: 1, borderDash: [4,4], pointRadius: 0, fill: false, tension: 0, order: 3 },
+            { label: 'Induló összeg', data: startLine, borderColor: tc.startLine, borderWidth: 1, borderDash: [4,4], pointRadius: 0, fill: false, tension: 0, order: 3 },
             { label: 'Bankszámlán (reális)', data: cashReal, borderColor: '#f97316', backgroundColor: 'rgba(249,115,22,0.08)', borderWidth: 2.5, pointRadius: 0, fill: false, tension: 0.3, order: 2 },
             { label: 'Állampapírban (reális)', data: investedReal, borderColor: '#16a34a', backgroundColor: 'rgba(22,163,74,0.10)', borderWidth: 2.5, pointRadius: 0, fill: { target: 1, above: 'rgba(22,163,74,0.10)' }, tension: 0.3, order: 1 },
         ];
@@ -367,12 +368,16 @@ function calculate() {
             aspectRatio: 2.2,
             interaction: { mode: 'index', intersect: false },
             plugins: {
-                legend: { position: 'top', labels: { boxWidth: 14, font: { size: 12 } } },
-                tooltip: { callbacks: { label: ctx => '  ' + ctx.dataset.label + ': ' + fmtFull(ctx.parsed.y, sym) } }
+                legend: { position: 'top', labels: { boxWidth: 14, font: { size: 12 }, color: tc.legend } },
+                tooltip: {
+                    backgroundColor: tc.tooltipBg, titleColor: tc.tooltipText, bodyColor: tc.tooltipText,
+                    borderColor: tc.tooltipBorder, borderWidth: 1,
+                    callbacks: { label: ctx => '  ' + ctx.dataset.label + ': ' + fmtFull(ctx.parsed.y, sym) }
+                }
             },
             scales: {
-                x: { ticks: { maxTicksLimit: 10, font: { size: 11 } } },
-                y: { ticks: { font: { size: 11 }, callback: v => fmtShort(v, sym) } }
+                x: { grid: { color: tc.grid }, ticks: { maxTicksLimit: 10, font: { size: 11 }, color: tc.tick } },
+                y: { grid: { color: tc.grid }, ticks: { font: { size: 11 }, color: tc.tick, callback: v => fmtShort(v, sym) } }
             }
         }
     });

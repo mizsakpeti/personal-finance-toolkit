@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Personal Finance Toolkit{% endblock %}</title>
+    <script>(function(){var t=localStorage.getItem('theme');if(t==='dark'||(t===null&&window.matchMedia('(prefers-color-scheme:dark)').matches))document.documentElement.classList.add('dark')})()</script>
+    <link rel="stylesheet" href="{{ root | default('') }}assets/theme.css">
     {% block head_scripts %}{% endblock %}
     <style>
         :root {
@@ -48,6 +50,7 @@
 {% block footer %}{% endblock %}
 
 {% block scripts %}{% endblock %}
+<script src="{{ root | default('') }}assets/theme.js"></script>
 
 </body>
 </html>
