@@ -170,7 +170,7 @@ templates/
    open docs/calculators/<your-calculator>/index.html
    ```
 
-4. **Commit both `templates/` and `docs/`** — CI checks that `docs/` stays in sync.
+4. **Commit `templates/`** — CI builds and deploys to GitHub Pages automatically. The generated HTML in `docs/` is gitignored.
 
 ### Adding a Hungarian version
 
@@ -182,11 +182,14 @@ Create `templates/calculators/<your-calculator>/hu/index.html.jinja` with `lang 
 
 ## Development
 
-### Build the site
+### Build the site locally
 
 ```bash
 uv run python scripts/build.py    # render templates/ → docs/
+open docs/index.html               # preview in browser
 ```
+
+The generated HTML in `docs/` is gitignored — CI builds and deploys it to GitHub Pages on every push to `main`.
 
 ### Run Tests
 
