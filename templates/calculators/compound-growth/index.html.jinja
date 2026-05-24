@@ -11,7 +11,6 @@
 
 {% block extra_css_vars %}--green: #16a34a; --orange: #ea580c;{% endblock %}
 
-{% block calc_btn_extra %}margin-top: 0.25rem;{% endblock %}
 
 {% block page_css %}
         /* ── Allocation slider block ── */
@@ -443,8 +442,6 @@
             <button class="account-opt active" id="btn-regular" onclick="setAccountType('regular')">Regular (15% gains tax)</button>
             <button class="account-opt" id="btn-tbsz"    onclick="setAccountType('tbsz')">TBSZ (0% after 5 years)</button>
         </div>
-
-        <button class="calc-btn" onclick="calculate()">Calculate growth →</button>
 
         <!-- Results -->
         <div class="results" id="results">

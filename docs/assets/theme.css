@@ -54,11 +54,6 @@ html.dark .account-opt.active {
     background: rgba(59, 130, 246, 0.15);
 }
 
-/* Calculate button hover */
-html.dark .calc-btn:hover {
-    background: #2563eb;
-}
-
 /* Post-calc text */
 html.dark .post-calc p,
 html.dark .post-calc li {

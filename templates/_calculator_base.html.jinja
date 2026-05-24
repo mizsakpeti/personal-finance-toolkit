@@ -152,21 +152,6 @@
         .toggle input:checked ~ .toggle-track { background: var(--blue); }
         .toggle input:checked ~ .toggle-thumb { transform: translateX(20px); }
 
-        .calc-btn {
-            width: 100%;
-            padding: 0.85rem;
-            background: var(--blue);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.15s;
-            margin-bottom: 2rem;
-            {% block calc_btn_extra %}{% endblock %}
-        }
-        .calc-btn:hover { background: #1d4ed8; }
 
         /* -- Results -- */
         .results { display: none; animation: fadeIn 0.25s ease; }
