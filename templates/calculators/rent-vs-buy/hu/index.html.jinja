@@ -1,0 +1,444 @@
+{% extends "_calculator_base.html.jinja" %}
+
+{% set lang = "hu" %}
+{% set use_katex = true %}
+{% set root = "../../../" %}
+{% set nav_all_tools = "Összes eszköz" %}
+{% set footer_part_of = "" %}
+{% set footer_disclaimer = "" %}
+
+{% block title %}Bérlés vs Vétel kalkulátor — Érdemes lakást venni, vagy jobb bérelni?{% endblock %}
+
+{% block extra_css_vars %}--green: #16a34a; --orange: #ea580c;{% endblock %}
+
+{% block page_css %}
+        .verdict-box {
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1.25rem;
+            text-align: center;
+        }
+        .verdict-box.buy { background: #f0fdf4; border: 2px solid #bbf7d0; }
+        .verdict-box.rent { background: #fff7ed; border: 2px solid #fed7aa; }
+        .verdict-box .verdict-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--muted);
+            margin-bottom: 0.4rem;
+        }
+        .verdict-box .verdict-value {
+            font-size: 1.6rem;
+            font-weight: 700;
+        }
+        .verdict-box.buy .verdict-value { color: var(--green); }
+        .verdict-box.rent .verdict-value { color: var(--orange); }
+        .verdict-box .verdict-detail {
+            font-size: 0.9rem;
+            color: var(--muted);
+            margin-top: 0.4rem;
+        }
+
+        .breakdown-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+        .breakdown-table th {
+            text-align: left;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--muted);
+            border-bottom: 1px solid var(--border);
+        }
+        .breakdown-table td {
+            padding: 0.6rem 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .breakdown-table tr:last-child td { border-bottom: none; }
+        .breakdown-table .row-label { color: var(--muted); }
+        .breakdown-table .row-value { font-weight: 600; text-align: right; }
+        .breakdown-table .row-pct { color: var(--muted); text-align: right; font-size: 0.82rem; }
+        .breakdown-table .total-row td { font-weight: 700; border-top: 2px solid var(--border); }
+{% endblock %}
+
+{% block lang_switch %}
+        <div class="lang-switch">
+            <a href="../">EN</a>
+            <span class="sep">|</span>
+            <span class="current">HU</span>
+        </div>
+{% endblock %}
+
+{% block content %}
+<!-- ── Bevezető szöveg ── -->
+<div class="article">
+    <div class="container">
+        <div class="meta">Személyes pénzügy · Kalkulátor</div>
+        <h1>Bérelni vagy venni: melyik éri meg jobban?</h1>
+        <p class="subtitle">Egy egyszerű szabály-alapú megközelítés, amely meghatározza a havi bérleti küszöböt — ez alatt a bérlés pénzügyileg kedvezőbb a lakásvásárlásnál.</p>
+
+        <div class="tldr">
+            <div class="tldr-label">Röviden</div>
+            <ul>
+                <li>A lakástulajdonlásnak rejtett költségei vannak a hitelkamat mellett: ingatlanadó, karbantartás és az önerő alternatív hozama.</li>
+                <li>Az „egyszerű szabály" az összes éves költséget összegzi az ingatlanár százalékában, majd havi küszöb-bérleti díjjá alakítja.</li>
+                <li>Ha a bérleti díj a küszöb alatt van, pénzügyileg a bérlés és a különbözet befektetése kedvezőbb.</li>
+            </ul>
+            <a href="#calculator">↓ Ugrás a kalkulátorhoz</a>
+        </div>
+
+        <p>A vétel vagy bérlés kérdése az egyik legtöbb érzelmet kiváltó személyes pénzügyi döntés. Mindkét oldalon erős vélemények vannak — de a matematika meglepően egyszerű, ha különválasztjuk a pénzügyi költségeket az életmódbeli preferenciáktól.</p>
+
+        <p>Ez a kalkulátor egy egyszerűsített „tulajdonlási költség" modellt használ. Összesíti a lakástulajdonlás összes éves költségét — hitelkamat, ingatlanadó, karbantartás és a lekötött önerő alternatív hozama — és összehasonlítja a bérleti díjjal. Ha a bérlés olcsóbb a küszöbértéknél, pénzügyileg jobban jársz, ha bérelsz és a megtakarítást befekteted.</p>
+
+        <p>A kulcs felismerés: az öneröd nem csak úgy ül a lakásban — máshol hozamot termelhetne. Ez az alternatív költség (opportunity cost), és gyakran ez a tulajdonlás legnagyobb rejtett kiadása, amit sokan figyelmen kívül hagynak.</p>
+
+        <hr class="section-break">
+    </div>
+</div>
+
+<!-- ── Kalkulátor ── -->
+<div class="calculator" id="calculator">
+    <div class="container">
+        <div class="calc-title">Számold ki a küszöb-bérleti díjat</div>
+        <div class="calc-desc">Add meg a lakásvásárlás adatait, és a kalkulátor kiszámolja azt a havi bérleti díjat, ami alatt a bérlés pénzügyileg kedvezőbb.</div>
+
+        <!-- Beviteli rács -->
+        <div class="input-grid">
+            <div class="input-group span-2">
+                <label>Ingatlan ára</label>
+                <div class="row">
+                    <input type="text" id="homePrice" value="100 000 000" inputmode="numeric"
+                           style="flex:1;min-width:0;"
+                           onfocus="unformatAmount(this)"
+                           onblur="formatAmountDisplay(this); recalculate()"
+                           oninput="recalculate()">
+                    <select id="currency" oninput="recalculate()" style="width:auto;flex-shrink:0;">
+                        <option value="Ft" selected>Ft HUF</option>
+                        <option value="€">€ EUR</option>
+                        <option value="$">$ USD</option>
+                        <option value="£">£ GBP</option>
+                        <option value="CHF">CHF</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Önerő</label>
+                <div class="row">
+                    <input type="number" id="downPaymentPct" value="50" min="0" max="100" step="5" oninput="recalculate()">
+                    <span class="unit">%</span>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Hitelkamat</label>
+                <div class="row">
+                    <input type="number" id="mortgageRate" value="6.0" min="0" max="30" step="0.1" oninput="recalculate()">
+                    <span class="unit">% / év</span>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Ingatlanadó</label>
+                <div class="row">
+                    <input type="number" id="propertyTax" value="0" min="0" max="10" step="0.1" oninput="recalculate()">
+                    <span class="unit">% / év</span>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Karbantartási költség</label>
+                <div class="row">
+                    <input type="number" id="maintenance" value="1.0" min="0" max="10" step="0.1" oninput="recalculate()">
+                    <span class="unit">% / év</span>
+                </div>
+            </div>
+
+            <div class="input-group span-2">
+                <label>Önerő alternatív hozama (opportunity cost)</label>
+                <div class="row">
+                    <input type="number" id="opportunityCost" value="4.0" min="0" max="20" step="0.5" oninput="recalculate()">
+                    <span class="unit">% / év</span>
+                </div>
+                <div class="hint">A nettó hozam, amit az öneröd máshol hozna (befektetés hozama mínusz ingatlanár-emelkedés)</div>
+            </div>
+        </div>
+
+        <!-- Eredmények -->
+        <div class="results visible" id="results">
+
+            <!-- Verdikt -->
+            <div class="verdict-box" id="verdict-box">
+                <div class="verdict-label">Küszöb-bérleti díj (havi)</div>
+                <div class="verdict-value" id="breakeven-value"></div>
+                <div class="verdict-detail" id="breakeven-detail"></div>
+            </div>
+
+            <!-- Eredmény kártyák -->
+            <div class="result-cards">
+                <div class="result-card">
+                    <div class="r-label">Önerő</div>
+                    <div class="r-value" id="val-downpayment"></div>
+                    <div class="r-sub" id="sub-downpayment"></div>
+                </div>
+                <div class="result-card">
+                    <div class="r-label">Hitelösszeg</div>
+                    <div class="r-value" id="val-loan"></div>
+                    <div class="r-sub" id="sub-loan"></div>
+                </div>
+                <div class="result-card">
+                    <div class="r-label">Éves alternatív költség</div>
+                    <div class="r-value" id="val-opportunity"></div>
+                    <div class="r-sub" id="sub-opportunity"></div>
+                </div>
+                <div class="result-card">
+                    <div class="r-label">Éves kamatköltség</div>
+                    <div class="r-value" id="val-interest"></div>
+                    <div class="r-sub" id="sub-interest"></div>
+                </div>
+            </div>
+
+            <!-- Bontás táblázat -->
+            <div class="chart-wrap">
+                <h3>Éves költségek bontása</h3>
+                <table class="breakdown-table">
+                    <thead>
+                        <tr>
+                            <th>Költségelem</th>
+                            <th style="text-align:right">% az ingatlanárból</th>
+                            <th style="text-align:right">Éves költség</th>
+                        </tr>
+                    </thead>
+                    <tbody id="breakdown-tbody">
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Diagram -->
+            <div class="chart-wrap">
+                <h3>Költségelemek az ingatlanár százalékában</h3>
+                <canvas id="chart"></canvas>
+            </div>
+
+        </div><!-- /results -->
+    </div>
+</div>
+
+<!-- ── Értelmezési útmutató ── -->
+<div class="post-calc">
+    <div class="container">
+        <h2>Hogyan értelmezd az eredményt</h2>
+        <p>A <strong>küszöb-bérleti díj</strong> az a havi összeg, aminél a vétel és bérlés pontosan egyformába kerül. Ha hasonló ingatlan bérleti díja <em>alacsonyabb</em> ennél, a bérlés pénzügyileg jobb döntés — havonta pénzt spórolsz, amit befektethetsz.</p>
+
+        <p>Ha a bérleti díjak <em>magasabbak</em> a küszöbnél, a vétel pénzügyileg kedvezőbb — a tulajdonlási költségeid alacsonyabbak, mint amennyit bérlésre költenél.</p>
+
+        <div class="insight-box">
+            <strong>Mi a helyzet az ingatlanár-emelkedéssel?</strong>
+            Az alternatív hozam (opportunity cost) paraméter már figyelembe veszi ezt. Ez a <em>különbség</em> a befektetéseiddel elérhető hozam és az ingatlan értéknövekedése között. A 4%-os opportunity cost azt jelenti: a befektetéseid ~8%-ot hoznának, miközben az ingatlan értéke ~4%-kal nő évente.
+        </div>
+
+        <h2>Fontos feltételezések</h2>
+        <ul>
+            <li>Ez a modell egyenes arányú kamatot használ (nem annuitásos törlesztőrészletet). Ez egy egyszerűsítés, ami jól működik összehasonlításra, de kismértékben felülbecsüli a korai évek költségeit hosszú távú hiteleknél.</li>
+            <li>Feltételezi, hogy az önerödet hasonló kockázatú eszközbe fektetnéd, ha nem vásárolnál ingatlant.</li>
+            <li>A tranzakciós költségek (ügyvédi díj, közvetítő) nincsenek benne — ezek rövid tartási időszak esetén a vételt kevésbé kedvezővé teszik.</li>
+        </ul>
+
+        <div class="insight-box">
+            <strong>Lásd még</strong>
+            Használd a <a href="../../calculators/compound-growth/hu/">Kamatos kamat kalkulátort</a>, hogy modellezd, mivé nőhet az öneröd, ha ugyanennyi időre befekteted.
+        </div>
+    </div>
+</div>
+
+<!-- ── A számítás menete ── -->
+<div class="how-it-works">
+    <div class="container">
+        <h2>Hogyan működik a számítás</h2>
+        <p>A modell kiszámolja a lakástulajdonlás teljes éves költségét az ingatlanár százalékában, majd ezt havi küszöb-bérleti díjjá alakítja.</p>
+        <div class="formula-box" id="math-formulas">
+            $$\text{Equity költsége (\%)} = \frac{\text{Önerő} \times \text{Alternatív hozam}}{\text{Ingatlanár}}$$
+            $$\text{Hitel költsége (\%)} = \frac{\text{Hitelösszeg} \times \text{Kamatláb}}{\text{Ingatlanár}}$$
+            $$\text{Egyszerű szabály} = \text{Ingatlanadó} + \text{Karbantartás} + \text{Equity költsége} + \text{Hitel költsége}$$
+            $$\text{Küszöb bérleti díj / hó} = \frac{\text{Ingatlanár} \times \text{Egyszerű szabály}}{12}$$
+        </div>
+        <p>Az „egyszerű szabály" az összes éves tulajdonlási költség összege, az ingatlanár százalékában kifejezve. A küszöb-bérleti díj ennek az éves költségnek a tizenkettede.</p>
+        <p class="disclaimer">Ez egy egyszerűsített modell a gyors összehasonlításhoz. A valós költségek a hiteltörlesztés ütemezése, adókedvezmények, biztosítás, közös költség és a helyi piaci viszonyok alapján változhatnak. Nem pénzügyi tanácsadás.</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block footer %}
+<footer>
+    A <a href="../../../index.html">Personal Finance Toolkit</a> része ·
+    <a href="https://github.com/mizsakpeti/personal-finance-toolkit">GitHub</a> ·
+    Nem pénzügyi tanácsadás.
+</footer>
+{% endblock %}
+
+{% block scripts %}
+<script>
+/* ── Formázó segédfüggvények ── */
+function formatAmountDisplay(el) {
+    const raw = parseFloat(el.value.replace(/\s/g, '').replace(',', '.'));
+    if (!isNaN(raw) && raw >= 0) el.value = Math.round(raw).toLocaleString('hu-HU').replace(/,/g, ' ');
+}
+function unformatAmount(el) {
+    el.value = el.value.replace(/\s/g, '');
+}
+function getFieldAmount(id) {
+    return parseFloat(document.getElementById(id).value.replace(/\s/g, '').replace(',', '.')) || 0;
+}
+function fmtFull(value, sym) {
+    const rounded = Math.round(value);
+    const formatted = Math.abs(rounded).toLocaleString('hu-HU').replace(/,/g, ' ');
+    const prefix = rounded < 0 ? '-' : '';
+    return sym === 'Ft' ? prefix + formatted + ' Ft' : prefix + sym + ' ' + formatted;
+}
+function fmtShort(value, sym) {
+    const abs = Math.abs(value);
+    const sign = value < 0 ? '-' : '';
+    let s;
+    if (abs >= 1e9)      s = (abs / 1e9).toFixed(1) + ' Mrd';
+    else if (abs >= 1e6) s = (abs / 1e6).toFixed(2) + ' M';
+    else if (abs >= 1e3) s = (abs / 1e3).toFixed(1) + ' E';
+    else                 s = Math.round(abs).toString();
+    return sym === 'Ft' ? sign + s + ' Ft' : sign + sym + ' ' + s;
+}
+function setText(id, text) { document.getElementById(id).textContent = text; }
+
+let chartInstance = null;
+
+function recalculate() {
+    calculate();
+}
+
+function calculate() {
+    const sym = document.getElementById('currency').value;
+    const homePrice = getFieldAmount('homePrice');
+    const downPaymentPct = parseFloat(document.getElementById('downPaymentPct').value) || 0;
+    const mortgageRate = parseFloat(document.getElementById('mortgageRate').value) || 0;
+    const propertyTax = parseFloat(document.getElementById('propertyTax').value) || 0;
+    const maintenance = parseFloat(document.getElementById('maintenance').value) || 0;
+    const opportunityCost = parseFloat(document.getElementById('opportunityCost').value) || 0;
+
+    // Core calculations
+    const downPayment = homePrice * (downPaymentPct / 100);
+    const loanAmount = homePrice - downPayment;
+    const annualInterest = loanAmount * (mortgageRate / 100);
+    const annualOpportunity = downPayment * (opportunityCost / 100);
+
+    // As percentage of home value
+    const costOfEquityPct = (downPaymentPct / 100) * opportunityCost;
+    const costOfDebtPct = ((100 - downPaymentPct) / 100) * mortgageRate;
+    const simpleRule = propertyTax + maintenance + costOfEquityPct + costOfDebtPct;
+    const breakevenMonthly = homePrice * (simpleRule / 100) / 12;
+
+    // Update verdict
+    const verdictBox = document.getElementById('verdict-box');
+    verdictBox.className = 'verdict-box rent';
+    document.getElementById('breakeven-value').textContent = fmtFull(breakevenMonthly, sym);
+    document.getElementById('breakeven-detail').textContent =
+        'Ha ennél olcsóbban tudsz bérelni, a bérlés pénzügyileg kedvezőbb. Éves költség: ' + simpleRule.toFixed(2) + '% az ingatlanárból.';
+
+    // Result cards
+    setText('val-downpayment', fmtFull(downPayment, sym));
+    setText('sub-downpayment', downPaymentPct + '% az ingatlanárból');
+    setText('val-loan', fmtFull(loanAmount, sym));
+    setText('sub-loan', (100 - downPaymentPct) + '% hitelből finanszírozott');
+    setText('val-opportunity', fmtFull(annualOpportunity, sym));
+    setText('sub-opportunity', costOfEquityPct.toFixed(2) + '% az ingatlanárból');
+    setText('val-interest', fmtFull(annualInterest, sym));
+    setText('sub-interest', costOfDebtPct.toFixed(2) + '% az ingatlanárból');
+
+    // Breakdown table
+    const tbody = document.getElementById('breakdown-tbody');
+    const annualPropertyTax = homePrice * (propertyTax / 100);
+    const annualMaintenance = homePrice * (maintenance / 100);
+    const totalAnnual = annualPropertyTax + annualMaintenance + annualOpportunity + annualInterest;
+
+    tbody.innerHTML = '';
+    const rows = [
+        ['Ingatlanadó', propertyTax, annualPropertyTax],
+        ['Karbantartás', maintenance, annualMaintenance],
+        ['Önerő alternatív költsége (equity)', costOfEquityPct, annualOpportunity],
+        ['Hitelkamat (debt)', costOfDebtPct, annualInterest],
+    ];
+    rows.forEach(([label, pct, cost]) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td class="row-label">${label}</td><td class="row-pct">${pct.toFixed(2)}%</td><td class="row-value">${fmtFull(cost, sym)}</td>`;
+        tbody.appendChild(tr);
+    });
+    // Total row
+    const totalTr = document.createElement('tr');
+    totalTr.className = 'total-row';
+    totalTr.innerHTML = `<td><strong>Összesen (egyszerű szabály)</strong></td><td class="row-pct"><strong>${simpleRule.toFixed(2)}%</strong></td><td class="row-value">${fmtFull(totalAnnual, sym)}</td>`;
+    tbody.appendChild(totalTr);
+
+    // Chart
+    const tc = getChartColors();
+    if (chartInstance) chartInstance.destroy();
+
+    chartInstance = new Chart(document.getElementById('chart').getContext('2d'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Ingatlanadó', 'Karbantartás', 'Alternatív költség', 'Hitelkamat'],
+            datasets: [{
+                data: [propertyTax, maintenance, costOfEquityPct, costOfDebtPct],
+                backgroundColor: [
+                    'rgba(234, 88, 12, 0.7)',
+                    'rgba(99, 102, 241, 0.7)',
+                    'rgba(22, 163, 74, 0.7)',
+                    'rgba(37, 99, 235, 0.7)',
+                ],
+                borderColor: [
+                    'rgba(234, 88, 12, 1)',
+                    'rgba(99, 102, 241, 1)',
+                    'rgba(22, 163, 74, 1)',
+                    'rgba(37, 99, 235, 1)',
+                ],
+                borderWidth: 1,
+            }],
+        },
+        options: {
+            responsive: true,
+            aspectRatio: 2,
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: { color: tc.legend, font: { size: 12 }, padding: 16 },
+                },
+                tooltip: {
+                    backgroundColor: tc.tooltipBg,
+                    titleColor: tc.tooltipText,
+                    bodyColor: tc.tooltipText,
+                    borderColor: tc.tooltipBorder,
+                    borderWidth: 1,
+                    callbacks: {
+                        label: function(ctx) {
+                            const pctVal = ctx.parsed.toFixed(2);
+                            const annual = homePrice * (ctx.parsed / 100);
+                            return ` ${ctx.label}: ${pctVal}% (${fmtFull(annual, sym)}/év)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    document.getElementById('results').classList.add('visible');
+}
+
+// ── Inicializálás ──
+window.addEventListener('load', () => {
+    calculate();
+});
+</script>
+{% endblock %}
