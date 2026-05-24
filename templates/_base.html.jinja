@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Personal Finance Toolkit{% endblock %}</title>
+    {% block head_scripts %}{% endblock %}
+    <style>
+        :root {
+            --blue: #2563eb;
+            {% block extra_css_vars %}{% endblock %}
+            --text: #111827;
+            --muted: #6b7280;
+            --border: #e5e7eb;
+            --bg: #f9fafb;
+            --white: #ffffff;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: var(--text);
+            background: var(--bg);
+            line-height: {% block body_line_height %}1.6{% endblock %};
+        }
+
+        /* -- Header -- */
+        header { background: var(--white); border-bottom: 1px solid var(--border); padding: 1rem 1.5rem; }
+        {% block header_css %}
+        header .inner { max-width: 800px; margin: 0 auto; display: flex; align-items: center; gap: 1.5rem; }
+        header .brand { font-weight: 700; font-size: 1rem; text-decoration: none; color: var(--text); }
+        header a { color: var(--muted); text-decoration: none; font-size: 0.9rem; }
+        header a:hover { color: var(--text); }
+        {% endblock %}
+
+        /* -- Footer -- */
+        footer { padding: 1.5rem; text-align: center; font-size: {% block footer_font_size %}0.85rem{% endblock %}; color: var(--muted); border-top: 1px solid var(--border); }
+        footer a { color: var(--muted); }
+
+        {% block styles %}{% endblock %}
+    </style>
+</head>
+<body>
+
+{% block header %}{% endblock %}
+
+{% block content %}{% endblock %}
+
+{% block footer %}{% endblock %}
+
+{% block scripts %}{% endblock %}
+
+</body>
+</html>

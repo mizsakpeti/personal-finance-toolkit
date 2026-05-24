@@ -1,253 +1,40 @@
-<!DOCTYPE html>
-<html lang="hu">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HUF vs EUR — Deviza-hozam kalkulátor</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <style>
-        :root {
-            --blue: #2563eb;
---green: #16a34a; --orange: #ea580c; --purple: #7c3aed;            --text: #111827;
-            --muted: #6b7280;
-            --border: #e5e7eb;
-            --bg: #f9fafb;
-            --white: #ffffff;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            color: var(--text);
-            background: var(--bg);
-            line-height: 1.7;
-        }
+{% set lang = "hu" %}
+{% set use_katex = false %}
+{% set root = "../../../" %}
+{% set nav_all_tools = "Összes eszköz" %}
+{% set footer_part_of = "" %}
+{% set footer_disclaimer = "" %}
+{% extends "_calculator_base.html.jinja" %}
 
-        /* -- Header -- */
-        header { background: var(--white); border-bottom: 1px solid var(--border); padding: 1rem 1.5rem; }
-        header nav { max-width: 800px; margin: 0 auto; display: flex; align-items: center; gap: 1.5rem; }
-        header .brand { font-weight: 700; font-size: 1rem; text-decoration: none; color: var(--text); margin-right: auto; }
-        header a { color: var(--muted); text-decoration: none; font-size: 0.9rem; }
-        header a:hover { color: var(--text); }
+{% block title %}HUF vs EUR — Deviza-hozam kalkulátor{% endblock %}
 
-        /* -- Footer -- */
-        footer { padding: 1.5rem; text-align: center; font-size: 0.82rem; color: var(--muted); border-top: 1px solid var(--border); }
-        footer a { color: var(--muted); }
+{% block extra_css_vars %}--green: #16a34a; --orange: #ea580c; --purple: #7c3aed;{% endblock %}
+{% block article_padding %}3rem 0 2rem{% endblock %}
+{% block article_h1_size %}2rem{% endblock %}
+{% block article_subtitle_mb %}1.75rem{% endblock %}
+{% block article_p_mb %}1.1rem{% endblock %}
+{% block article_p_size %}1.02rem{% endblock %}
+{% block calc_title_mb %}0.4rem{% endblock %}
+{% block input_grid_mb %}0.25rem{% endblock %}
+{% block toggle_row_mb %}{% endblock %}
+{% block calc_btn_extra %}margin-top: 1.25rem;{% endblock %}
+{% block result_cards_cols %}1fr 1fr 1fr{% endblock %}
+{% block result_value_size %}1.3rem{% endblock %}
+{% block result_real_size %}0.8rem{% endblock %}
+{% block chart_wrap_mb %}0.5rem{% endblock %}
+{% block how_it_works_padding %}2rem 0{% endblock %}
+{% block how_h2_mb %}0.6rem{% endblock %}
+{% block disclaimer_pt %}0.85rem{% endblock %}
 
-        .container { max-width: 800px; margin: 0 auto; padding: 0 1.5rem; }
+{% block lang_switch %}
+        <div class="lang-switch">
+            <a href="../">EN</a>
+            <span class="sep">|</span>
+            <span class="current">HU</span>
+        </div>
+{% endblock %}
 
-        /* -- Article / Blog -- */
-        .article { background: var(--white); border-bottom: 1px solid var(--border); padding: 3rem 0 2rem; }
-        .article .meta { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--blue); margin-bottom: 0.75rem; }
-        .article h1 { font-size: 2rem; font-weight: 700; line-height: 1.2; margin-bottom: 0.6rem; }
-        .article .subtitle { color: var(--muted); font-size: 1.05rem; margin-bottom: 1.75rem; }
-        .article p { margin-bottom: 1.1rem; font-size: 1.02rem; }
-        .article blockquote {
-            border-left: 4px solid var(--blue);
-            padding: 0.85rem 1.25rem;
-            margin: 1.75rem 0;
-            background: #eff6ff;
-            border-radius: 0 8px 8px 0;
-            font-style: italic;
-            color: #1e40af;
-            font-size: 1.05rem;
-        }
-        .article .section-break { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
-
-        /* -- TL;DR -- */
-        .tldr {
-            background: #eff6ff;
-            border: 1px solid #bfdbfe;
-            border-radius: 8px;
-            padding: 1.1rem 1.25rem;
-            margin: 0 0 2rem;
-        }
-        .tldr .tldr-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--blue); margin-bottom: 0.55rem; }
-        .tldr ul { margin: 0 0 0.75rem 1.2rem; }
-        .tldr li { font-size: 0.95rem; color: #1e3a5f; margin-bottom: 0.35rem; line-height: 1.5; }
-        .tldr a { font-size: 0.88rem; font-weight: 600; color: var(--blue); text-decoration: none; }
-        .tldr a:hover { text-decoration: underline; }
-
-        /* -- Calculator -- */
-        .calculator { padding: 2.5rem 0; }
-        .calc-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 0.4rem; }
-        .calc-desc { font-size: 0.9rem; color: var(--muted); margin-bottom: 1.5rem; }
-
-        .section-label {
-            font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
-            letter-spacing: 0.07em; color: var(--muted); margin: 1.25rem 0 0.6rem;
-        }
-
-        .presets { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 1.5rem; align-items: center; }
-        .presets-label { font-size: 0.8rem; color: var(--muted); font-weight: 500; }
-        .preset-btn {
-            padding: 0.35rem 0.85rem;
-            border: 1px solid var(--border);
-            background: var(--white);
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            color: var(--muted);
-            transition: all 0.15s;
-        }
-        .preset-btn:hover { border-color: var(--blue); color: var(--blue); background: #eff6ff; }
-        .preset-btn.active { border-color: var(--blue); color: var(--blue); background: #eff6ff; font-weight: 600; }
-
-        .input-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0.85rem;
-            margin-bottom: 0.25rem;
-        }
-        @media (max-width: 580px) { .input-grid { grid-template-columns: 1fr; } }
-
-        .input-group {
-            background: var(--white);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 0.9rem 1.1rem;
-            transition: border-color 0.15s;
-        }
-        .input-group:focus-within { border-color: var(--blue); }
-        .input-group label {
-            display: block;
-            font-size: 0.72rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            color: var(--muted);
-            margin-bottom: 0.3rem;
-        }
-        .input-group .row { display: flex; align-items: baseline; gap: 0.4rem; }
-        .input-group input, .input-group select {
-            border: none;
-            outline: none;
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: var(--text);
-            background: transparent;
-            width: 100%;
-            min-width: 0;
-        }
-        .input-group select { font-size: 1rem; cursor: pointer; }
-        .input-group .unit { font-size: 0.9rem; color: var(--muted); white-space: nowrap; flex-shrink: 0; }
-        .input-group .hint { font-size: 0.75rem; color: var(--muted); margin-top: 0.25rem; }
-        .span-2 { grid-column: span 2; }
-        @media (max-width: 580px) { .span-2 { grid-column: span 1; } }
-
-        /* -- Toggles -- */
-        .toggle-row {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            margin-bottom: ;
-            font-size: 0.95rem;
-            cursor: pointer;
-            user-select: none;
-        }
-        .toggle { position: relative; display: inline-block; width: 42px; height: 22px; flex-shrink: 0; }
-        .toggle input { opacity: 0; width: 0; height: 0; }
-        .toggle-track {
-            position: absolute; inset: 0;
-            background: var(--border);
-            border-radius: 22px;
-            transition: background 0.2s;
-        }
-        .toggle-thumb {
-            position: absolute;
-            width: 16px; height: 16px;
-            left: 3px; top: 3px;
-            background: white;
-            border-radius: 50%;
-            transition: transform 0.2s;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-        }
-        .toggle input:checked ~ .toggle-track { background: var(--blue); }
-        .toggle input:checked ~ .toggle-thumb { transform: translateX(20px); }
-
-        .calc-btn {
-            width: 100%;
-            padding: 0.85rem;
-            background: var(--blue);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.15s;
-            margin-bottom: 2rem;
-margin-top: 1.25rem;        }
-        .calc-btn:hover { background: #1d4ed8; }
-
-        /* -- Results -- */
-        .results { display: none; animation: fadeIn 0.25s ease; }
-        .results.visible { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-
-        .result-cards { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.85rem; margin-bottom: 1.25rem; }
-        @media (max-width: 580px) { .result-cards { grid-template-columns: 1fr; } }
-
-        .result-card {
-            background: var(--white);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1.1rem 1.25rem;
-        }
-        .result-card .r-label { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 0.2rem; }
-        .result-card .r-value { font-size: 1.3rem; font-weight: 700; line-height: 1.2; }
-        .result-card .r-sub { font-size: 0.78rem; color: var(--muted); margin-top: 0.25rem; }
-        .result-card .r-real { font-size: 0.8rem; color: var(--muted); margin-top: 0.35rem; border-top: 1px solid var(--border); padding-top: 0.35rem; }
-
-        .chart-wrap {
-            background: var(--white);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1.5rem 1.5rem 1rem;
-            margin-bottom: 0.5rem;
-        }
-        .chart-wrap h3 { font-size: 0.9rem; font-weight: 600; color: var(--muted); margin-bottom: 1.1rem; }
-
-        /* -- Post-calculator -- */
-        .post-calc { padding: 2rem 0; }
-        .post-calc h2 { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.75rem; }
-        .post-calc p { margin-bottom: 1.1rem; font-size: 1.02rem; color: #374151; }
-        .post-calc ul { margin: 0 0 1.1rem 1.4rem; }
-        .post-calc li { font-size: 1.02rem; color: #374151; margin-bottom: 0.4rem; }
-        .post-calc a { color: var(--blue); }
-        .insight-box {
-            background: #f0fdf4;
-            border: 1px solid #bbf7d0;
-            border-radius: 8px;
-            padding: 1.1rem 1.25rem;
-            margin: 1.5rem 0;
-            font-size: 0.95rem;
-            color: #14532d;
-        }
-        .insight-box strong { display: block; margin-bottom: 0.3rem; font-size: 1rem; }
-
-        /* -- How it works -- */
-        .how-it-works { background: var(--white); border-top: 1px solid var(--border); padding: 2rem 0; }
-        .how-it-works h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.6rem; }
-        .how-it-works p { font-size: 0.92rem; color: var(--muted); margin-bottom: 0.85rem; }
-        .formula-box {
-            background: var(--bg);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 0.75rem 1.25rem;
-            color: #374151;
-            margin: 0.85rem 0 1rem;
-            overflow-x: auto;
-        }
-        .formula-box .katex-display { margin: 0.6rem 0; }
-        .disclaimer { font-size: 0.82rem; color: var(--muted); border-top: 1px solid var(--border); padding-top: 0.85rem; margin-top: 0.5rem; }
-
-        /* -- Language switcher -- */
-        .lang-switch { display: flex; align-items: center; gap: 0.3rem; font-size: 0.85rem; margin-left: auto; }
-        .lang-switch a { color: var(--muted); text-decoration: none; padding: 0.2rem 0.4rem; border-radius: 4px; }
-        .lang-switch a:hover { color: var(--text); background: var(--bg); }
-        .lang-switch .current { font-weight: 700; color: var(--text); padding: 0.2rem 0.4rem; }
-        .lang-switch .sep { color: var(--border); }
-
+{% block page_css %}
         .toggle-row { margin: 1.1rem 0; }
 
         .breakeven-box {
@@ -264,23 +51,17 @@ margin-top: 1.25rem;        }
         .result-card.diff-pos { border-top: 3px solid var(--green); }
         .result-card.diff-neg { border-top: 3px solid var(--orange); }
         .result-card.eur .r-value { color: var(--purple); }
-    </style>
-</head>
-<body>
+{% endblock %}
 
-<header>
-    <nav>
-        <a href="../../../index.html" class="brand">Personal Finance Toolkit</a>
-        <a href="../../../index.html">Összes eszköz</a>
-        <a href="https://github.com/mizsakpeti/personal-finance-toolkit">GitHub</a>
-        <div class="lang-switch">
-            <a href="../">EN</a>
-            <span class="sep">|</span>
-            <span class="current">HU</span>
-        </div>
-    </nav>
-</header>
+{% block footer %}
+<footer>
+    A <a href="../../../index.html">Personal Finance Toolkit</a> része ·
+    <a href="https://github.com/mizsakpeti/personal-finance-toolkit">GitHub</a> ·
+    Nem minősül pénzügyi tanácsadásnak.
+</footer>
+{% endblock %}
 
+{% block content %}
 <div class="article">
     <div class="container">
         <div class="meta">Személyes pénzügy · Kalkulátor</div>
@@ -429,13 +210,9 @@ margin-top: 1.25rem;        }
         <p class="disclaimer">Az alapértelmezett értékek 2026. május körüli adatokon alapulnak. A forint kötvényhozam forrása a FixMÁP/MÁP+ (Államkincstár); az eurós kamat az EKB betéti rendelkezésre állás kamatláb (2,00%) és jellemző eurozónás megtakarítási számlák alapján; a forint infláció az MNB 2026-os előrejelzése (~3,2%); az EUR/HUF árfolyam: ~365 (2026. május); összehasonlításként: ~403 (2025. május), ~310 (2015). Az árfolyam-előrejelzések természetüknél fogva bizonytalanok — ez a kalkulátor forgatókönyv-elemző eszköz, nem jóslat. Nem minősül pénzügyi tanácsadásnak.</p>
     </div>
 </div>
+{% endblock %}
 
-<footer>
-    A <a href="../../../index.html">Personal Finance Toolkit</a> része ·
-    <a href="https://github.com/mizsakpeti/personal-finance-toolkit">GitHub</a> ·
-    Nem minősül pénzügyi tanácsadásnak.
-</footer>
-
+{% block scripts %}
 <script>
 function formatAmountDisplay(el) {
     const raw = parseFloat(el.value.replace(/\s/g, '').replace(',', '.'));
@@ -624,6 +401,4 @@ function calculate() {
 
 window.addEventListener('load', () => calculate());
 </script>
-
-</body>
-</html>
+{% endblock %}
