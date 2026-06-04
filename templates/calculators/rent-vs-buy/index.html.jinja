@@ -18,8 +18,8 @@
             margin-bottom: 1.25rem;
             text-align: center;
         }
-        .verdict-box.buy { background: #f0fdf4; border: 2px solid #bbf7d0; }
-        .verdict-box.rent { background: #fff7ed; border: 2px solid #fed7aa; }
+        .verdict-box.optimistic { background: #f0fdf4; border: 2px solid #bbf7d0; }
+        .verdict-box.conservative { background: #fff7ed; border: 2px solid #fed7aa; }
         .verdict-box .verdict-label {
             font-size: 0.72rem;
             font-weight: 700;
@@ -32,8 +32,8 @@
             font-size: 1.6rem;
             font-weight: 700;
         }
-        .verdict-box.buy .verdict-value { color: var(--green); }
-        .verdict-box.rent .verdict-value { color: var(--orange); }
+        .verdict-box.optimistic .verdict-value { color: var(--green); }
+        .verdict-box.conservative .verdict-value { color: var(--orange); }
         .verdict-box .verdict-detail {
             font-size: 0.9rem;
             color: var(--muted);
@@ -192,12 +192,12 @@
 
             <!-- Dual verdict -->
             <div class="result-cards">
-                <div class="verdict-box rent" id="verdict-simple">
+                <div class="verdict-box" id="verdict-simple">
                     <div class="verdict-label">Simple Rule (Year-1 / Conservative)</div>
                     <div class="verdict-value" id="breakeven-simple"></div>
                     <div class="verdict-detail" id="detail-simple"></div>
                 </div>
-                <div class="verdict-box buy" id="verdict-adjusted">
+                <div class="verdict-box" id="verdict-adjusted">
                     <div class="verdict-label">Adjusted (Amortization + Inflation)</div>
                     <div class="verdict-value" id="breakeven-adjusted"></div>
                     <div class="verdict-detail" id="detail-adjusted"></div>
@@ -297,7 +297,7 @@
             $$\text{Cost of Equity (\%)} = \frac{\text{Down Payment} \times \text{Opportunity Cost Rate}}{\text{Home Price}}$$
             $$\text{Cost of Debt (\%)} = \frac{\text{Loan Amount} \times \text{Mortgage Rate}}{\text{Home Price}}$$
             $$\text{Simple Rule} = \text{Property Tax} + \text{Maintenance} + \text{Cost of Equity} + \text{Cost of Debt}$$
-            $$\text{Breakeven Rent / Month} = \frac{\text{Home Price} \times \text{Simple Rule}}{12}$$
+            $$\text{Breakeven Rent / Month} = \frac{\text{Home Price} \times \text{Simple Rule\,(\%)}}{1200}$$
         </div>
         <p>Where the "Simple Rule" is the sum of all annual ownership costs expressed as a percentage of the home's value. The breakeven rent is that annual cost divided by 12.</p>
         <p class="disclaimer">This is a simplified model for quick comparison. Actual costs vary based on mortgage amortization schedules, tax deductions, insurance, HOA fees, and local market conditions. Not financial advice.</p>
@@ -343,34 +343,42 @@ function recalculate() {
 }
 
 /**
- * Compute the real (inflation-adjusted) present value of all mortgage payments
- * over the loan term, then return the annualized average cost.
+ * Tracks the amortization schedule month by month, discounting both interest
+ * and opportunity cost to today's real dollars via inflation. Opportunity cost
+ * grows each month as principal repayments build equity.
  */
-function calcRealAnnualInterest(loanAmount, mortgageRate, loanTermYears, inflationRate) {
-    if (loanAmount <= 0 || mortgageRate <= 0 || loanTermYears <= 0) return 0;
+function calcAdjustedCosts(homePrice, loanAmount, mortgageRate, loanTermYears, inflationRate, opportunityCostRate) {
+    if (loanTermYears <= 0 || homePrice <= 0) return { interest: 0, opportunityCost: 0 };
 
-    const monthlyRate = mortgageRate / 100 / 12;
     const nPayments = loanTermYears * 12;
+    const monthlyRate = mortgageRate / 100 / 12;
     const monthlyInflation = inflationRate / 100 / 12;
+    const monthlyOpportunityRate = opportunityCostRate / 100 / 12;
 
-    // Monthly annuity payment
-    const monthlyPayment = loanAmount * monthlyRate / (1 - Math.pow(1 + monthlyRate, -nPayments));
-
-    // Track remaining balance and sum real interest
     let balance = loanAmount;
-    let totalRealInterest = 0;
-
-    for (let m = 1; m <= nPayments; m++) {
-        const interestThisMonth = balance * monthlyRate;
-        const principalThisMonth = monthlyPayment - interestThisMonth;
-        // Discount to present value using inflation
-        const realInterest = interestThisMonth / Math.pow(1 + monthlyInflation, m);
-        totalRealInterest += realInterest;
-        balance -= principalThisMonth;
+    let monthlyPayment = 0;
+    if (loanAmount > 0) {
+        monthlyPayment = mortgageRate > 0
+            ? loanAmount * monthlyRate / (1 - Math.pow(1 + monthlyRate, -nPayments))
+            : loanAmount / nPayments;
     }
 
-    // Annualized average real interest cost
-    return totalRealInterest / loanTermYears;
+    let totalRealInterest = 0;
+    let totalRealOpportunityCost = 0;
+
+    for (let m = 1; m <= nPayments; m++) {
+        const equity = homePrice - balance;
+        const interestThisMonth = balance * monthlyRate;
+        const discountFactor = Math.pow(1 + monthlyInflation, m);
+        totalRealInterest += interestThisMonth / discountFactor;
+        totalRealOpportunityCost += (equity * monthlyOpportunityRate) / discountFactor;
+        balance -= monthlyPayment - interestThisMonth;
+    }
+
+    return {
+        interest: totalRealInterest / loanTermYears,
+        opportunityCost: totalRealOpportunityCost / loanTermYears,
+    };
 }
 
 function calculate() {
@@ -387,20 +395,26 @@ function calculate() {
     // Core calculations
     const downPayment = homePrice * (downPaymentPct / 100);
     const loanAmount = homePrice - downPayment;
-    const annualInterestSimple = loanAmount * (mortgageRate / 100);
     const annualOpportunity = downPayment * (opportunityCost / 100);
 
-    // Simple rule (year-1 / conservative)
+    // Simple rule (year-1 / conservative): static equity, interest-only debt cost
     const costOfEquityPct = (downPaymentPct / 100) * opportunityCost;
     const costOfDebtPctSimple = ((100 - downPaymentPct) / 100) * mortgageRate;
     const simpleRule = propertyTax + maintenance + costOfEquityPct + costOfDebtPctSimple;
     const breakevenSimple = homePrice * (simpleRule / 100) / 12;
 
-    // Adjusted model: real annualized interest cost (amortization + inflation)
-    const realAnnualInterest = calcRealAnnualInterest(loanAmount, mortgageRate, loanTerm, inflationRate);
-    const costOfDebtPctAdj = homePrice > 0 ? (realAnnualInterest / homePrice) * 100 : 0;
-    const adjustedRule = propertyTax + maintenance + costOfEquityPct + costOfDebtPctAdj;
+    // Adjusted model: inflation-discounted, amortizing debt + growing equity opportunity cost
+    const adjusted = calcAdjustedCosts(homePrice, loanAmount, mortgageRate, loanTerm, inflationRate, opportunityCost);
+    const costOfDebtPctAdj = homePrice > 0 ? (adjusted.interest / homePrice) * 100 : 0;
+    const costOfEquityPctAdj = homePrice > 0 ? (adjusted.opportunityCost / homePrice) * 100 : 0;
+    const adjustedRule = propertyTax + maintenance + costOfEquityPctAdj + costOfDebtPctAdj;
     const breakevenAdjusted = homePrice * (adjustedRule / 100) / 12;
+
+    // Verdict box colors: higher breakeven = conservative (orange), lower = optimistic (green)
+    document.getElementById('verdict-simple').className =
+        'verdict-box ' + (breakevenSimple >= breakevenAdjusted ? 'conservative' : 'optimistic');
+    document.getElementById('verdict-adjusted').className =
+        'verdict-box ' + (breakevenAdjusted >= breakevenSimple ? 'conservative' : 'optimistic');
 
     // Update dual verdict
     document.getElementById('breakeven-simple').textContent = fmtFull(breakevenSimple, sym);
@@ -418,7 +432,7 @@ function calculate() {
     setText('sub-loan', (100 - downPaymentPct) + '% financed over ' + loanTerm + ' years');
     setText('val-opportunity', fmtFull(annualOpportunity, sym));
     setText('sub-opportunity', costOfEquityPct.toFixed(2) + '% of home value');
-    setText('val-interest', fmtFull(realAnnualInterest, sym));
+    setText('val-interest', fmtFull(adjusted.interest, sym));
     setText('sub-interest', costOfDebtPctAdj.toFixed(2) + '% of home value (vs ' + costOfDebtPctSimple.toFixed(2) + '% simple)');
 
     // Breakdown table — show both simple and adjusted
@@ -428,18 +442,18 @@ function calculate() {
 
     tbody.innerHTML = '';
     const rows = [
-        ['Property Tax', propertyTax, annualPropertyTax, propertyTax, annualPropertyTax],
-        ['Maintenance', maintenance, annualMaintenance, maintenance, annualMaintenance],
-        ['Opportunity Cost of Equity', costOfEquityPct, annualOpportunity, costOfEquityPct, annualOpportunity],
-        ['Mortgage Interest', costOfDebtPctSimple, annualInterestSimple, costOfDebtPctAdj, realAnnualInterest],
+        ['Property Tax',              propertyTax,        propertyTax,        annualPropertyTax],
+        ['Maintenance',               maintenance,        maintenance,        annualMaintenance],
+        ['Opportunity Cost of Equity', costOfEquityPct,   costOfEquityPctAdj, adjusted.opportunityCost],
+        ['Mortgage Interest',         costOfDebtPctSimple, costOfDebtPctAdj,  adjusted.interest],
     ];
-    rows.forEach(([label, pctSimple, costSimple, pctAdj, costAdj]) => {
+    rows.forEach(([label, pctSimple, pctAdj, costAdj]) => {
         const tr = document.createElement('tr');
         tr.innerHTML = `<td class="row-label">${label}</td><td class="row-pct">${pctSimple.toFixed(2)}%</td><td class="row-pct">${pctAdj.toFixed(2)}%</td><td class="row-value">${fmtFull(costAdj, sym)}</td>`;
         tbody.appendChild(tr);
     });
     // Total row
-    const totalAnnualAdj = annualPropertyTax + annualMaintenance + annualOpportunity + realAnnualInterest;
+    const totalAnnualAdj = annualPropertyTax + annualMaintenance + adjusted.opportunityCost + adjusted.interest;
     const totalTr = document.createElement('tr');
     totalTr.className = 'total-row';
     totalTr.innerHTML = `<td><strong>Total</strong></td><td class="row-pct"><strong>${simpleRule.toFixed(2)}%</strong></td><td class="row-pct"><strong>${adjustedRule.toFixed(2)}%</strong></td><td class="row-value">${fmtFull(totalAnnualAdj, sym)}</td>`;
@@ -454,7 +468,7 @@ function calculate() {
         data: {
             labels: ['Property Tax', 'Maintenance', 'Opportunity Cost', 'Mortgage Interest (adj.)'],
             datasets: [{
-                data: [propertyTax, maintenance, costOfEquityPct, costOfDebtPctAdj],
+                data: [propertyTax, maintenance, costOfEquityPctAdj, costOfDebtPctAdj],
                 backgroundColor: [
                     'rgba(234, 88, 12, 0.7)',
                     'rgba(99, 102, 241, 0.7)',

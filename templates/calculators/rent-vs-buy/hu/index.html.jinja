@@ -18,8 +18,8 @@
             margin-bottom: 1.25rem;
             text-align: center;
         }
-        .verdict-box.buy { background: #f0fdf4; border: 2px solid #bbf7d0; }
-        .verdict-box.rent { background: #fff7ed; border: 2px solid #fed7aa; }
+        .verdict-box.optimistic { background: #f0fdf4; border: 2px solid #bbf7d0; }
+        .verdict-box.conservative { background: #fff7ed; border: 2px solid #fed7aa; }
         .verdict-box .verdict-label {
             font-size: 0.72rem;
             font-weight: 700;
@@ -32,8 +32,8 @@
             font-size: 1.6rem;
             font-weight: 700;
         }
-        .verdict-box.buy .verdict-value { color: var(--green); }
-        .verdict-box.rent .verdict-value { color: var(--orange); }
+        .verdict-box.optimistic .verdict-value { color: var(--green); }
+        .verdict-box.conservative .verdict-value { color: var(--orange); }
         .verdict-box .verdict-detail {
             font-size: 0.9rem;
             color: var(--muted);
@@ -192,12 +192,12 @@
 
             <!-- Kettős verdikt -->
             <div class="result-cards">
-                <div class="verdict-box rent" id="verdict-simple">
+                <div class="verdict-box" id="verdict-simple">
                     <div class="verdict-label">Egyszerű szabály (1. év / konzervatív)</div>
                     <div class="verdict-value" id="breakeven-simple"></div>
                     <div class="verdict-detail" id="detail-simple"></div>
                 </div>
-                <div class="verdict-box buy" id="verdict-adjusted">
+                <div class="verdict-box" id="verdict-adjusted">
                     <div class="verdict-label">Korrigált (törlesztés + infláció)</div>
                     <div class="verdict-value" id="breakeven-adjusted"></div>
                     <div class="verdict-detail" id="detail-adjusted"></div>
@@ -297,7 +297,7 @@
             $$\text{Equity költsége (\%)} = \frac{\text{Önerő} \times \text{Alternatív hozam}}{\text{Ingatlanár}}$$
             $$\text{Hitel költsége (\%)} = \frac{\text{Hitelösszeg} \times \text{Kamatláb}}{\text{Ingatlanár}}$$
             $$\text{Egyszerű szabály} = \text{Ingatlanadó} + \text{Karbantartás} + \text{Equity költsége} + \text{Hitel költsége}$$
-            $$\text{Küszöb bérleti díj / hó} = \frac{\text{Ingatlanár} \times \text{Egyszerű szabály}}{12}$$
+            $$\text{Küszöb bérleti díj / hó} = \frac{\text{Ingatlanár} \times \text{Egyszerű szabály\,(\%)}}{1200}$$
         </div>
         <p>Az „egyszerű szabály" az összes éves tulajdonlási költség összege, az ingatlanár százalékában kifejezve. A küszöb-bérleti díj ennek az éves költségnek a tizenkettede.</p>
         <p class="disclaimer">Ez egy egyszerűsített modell a gyors összehasonlításhoz. A valós költségek a hiteltörlesztés ütemezése, adókedvezmények, biztosítás, közös költség és a helyi piaci viszonyok alapján változhatnak. Nem pénzügyi tanácsadás.</p>
@@ -351,34 +351,42 @@ function recalculate() {
 }
 
 /**
- * Kiszámolja a hitel valós (inflációval korrigált) jelenértékű összes kamatát
- * a futamidő alatt, majd visszaadja az éves átlagos költséget.
+ * Hónapról hónapra követi a törlesztési ütemezést, inflációval diszkontálva
+ * a kamatot és az alternatív költséget egyaránt. Az alternatív költség nő,
+ * ahogy a tőketörlesztések növelik az önerőt.
  */
-function calcRealAnnualInterest(loanAmount, mortgageRate, loanTermYears, inflationRate) {
-    if (loanAmount <= 0 || mortgageRate <= 0 || loanTermYears <= 0) return 0;
+function calcAdjustedCosts(homePrice, loanAmount, mortgageRate, loanTermYears, inflationRate, opportunityCostRate) {
+    if (loanTermYears <= 0 || homePrice <= 0) return { interest: 0, opportunityCost: 0 };
 
-    const monthlyRate = mortgageRate / 100 / 12;
     const nPayments = loanTermYears * 12;
+    const monthlyRate = mortgageRate / 100 / 12;
     const monthlyInflation = inflationRate / 100 / 12;
+    const monthlyOpportunityRate = opportunityCostRate / 100 / 12;
 
-    // Havi annuitásos törlesztőrészlet
-    const monthlyPayment = loanAmount * monthlyRate / (1 - Math.pow(1 + monthlyRate, -nPayments));
-
-    // Fennálló tőke nyomon követése és reálkamat összegzése
     let balance = loanAmount;
-    let totalRealInterest = 0;
-
-    for (let m = 1; m <= nPayments; m++) {
-        const interestThisMonth = balance * monthlyRate;
-        const principalThisMonth = monthlyPayment - interestThisMonth;
-        // Jelenértékre diszkontálás inflációval
-        const realInterest = interestThisMonth / Math.pow(1 + monthlyInflation, m);
-        totalRealInterest += realInterest;
-        balance -= principalThisMonth;
+    let monthlyPayment = 0;
+    if (loanAmount > 0) {
+        monthlyPayment = mortgageRate > 0
+            ? loanAmount * monthlyRate / (1 - Math.pow(1 + monthlyRate, -nPayments))
+            : loanAmount / nPayments;
     }
 
-    // Éves átlagos reál kamatköltség
-    return totalRealInterest / loanTermYears;
+    let totalRealInterest = 0;
+    let totalRealOpportunityCost = 0;
+
+    for (let m = 1; m <= nPayments; m++) {
+        const equity = homePrice - balance;
+        const interestThisMonth = balance * monthlyRate;
+        const discountFactor = Math.pow(1 + monthlyInflation, m);
+        totalRealInterest += interestThisMonth / discountFactor;
+        totalRealOpportunityCost += (equity * monthlyOpportunityRate) / discountFactor;
+        balance -= monthlyPayment - interestThisMonth;
+    }
+
+    return {
+        interest: totalRealInterest / loanTermYears,
+        opportunityCost: totalRealOpportunityCost / loanTermYears,
+    };
 }
 
 function calculate() {
@@ -395,20 +403,26 @@ function calculate() {
     // Alapszámítások
     const downPayment = homePrice * (downPaymentPct / 100);
     const loanAmount = homePrice - downPayment;
-    const annualInterestSimple = loanAmount * (mortgageRate / 100);
     const annualOpportunity = downPayment * (opportunityCost / 100);
 
-    // Egyszerű szabály (1. év / konzervatív)
+    // Egyszerű szabály (1. év / konzervatív): statikus önerő, kamatmentes adósságköltség
     const costOfEquityPct = (downPaymentPct / 100) * opportunityCost;
     const costOfDebtPctSimple = ((100 - downPaymentPct) / 100) * mortgageRate;
     const simpleRule = propertyTax + maintenance + costOfEquityPct + costOfDebtPctSimple;
     const breakevenSimple = homePrice * (simpleRule / 100) / 12;
 
-    // Korrigált modell: reál éves kamatköltség (törlesztés + infláció)
-    const realAnnualInterest = calcRealAnnualInterest(loanAmount, mortgageRate, loanTerm, inflationRate);
-    const costOfDebtPctAdj = homePrice > 0 ? (realAnnualInterest / homePrice) * 100 : 0;
-    const adjustedRule = propertyTax + maintenance + costOfEquityPct + costOfDebtPctAdj;
+    // Korrigált modell: inflációval diszkontált, amortizáló adósság + növekvő önerő alternatív kölsége
+    const adjusted = calcAdjustedCosts(homePrice, loanAmount, mortgageRate, loanTerm, inflationRate, opportunityCost);
+    const costOfDebtPctAdj = homePrice > 0 ? (adjusted.interest / homePrice) * 100 : 0;
+    const costOfEquityPctAdj = homePrice > 0 ? (adjusted.opportunityCost / homePrice) * 100 : 0;
+    const adjustedRule = propertyTax + maintenance + costOfEquityPctAdj + costOfDebtPctAdj;
     const breakevenAdjusted = homePrice * (adjustedRule / 100) / 12;
+
+    // Verdikt doboz színek: magasabb küszöb = konzervatív (narancs), alacsonyabb = optimista (zöld)
+    document.getElementById('verdict-simple').className =
+        'verdict-box ' + (breakevenSimple >= breakevenAdjusted ? 'conservative' : 'optimistic');
+    document.getElementById('verdict-adjusted').className =
+        'verdict-box ' + (breakevenAdjusted >= breakevenSimple ? 'conservative' : 'optimistic');
 
     // Kettős verdikt frissítése
     document.getElementById('breakeven-simple').textContent = fmtFull(breakevenSimple, sym);
@@ -426,7 +440,7 @@ function calculate() {
     setText('sub-loan', (100 - downPaymentPct) + '% hitelből, ' + loanTerm + ' évre');
     setText('val-opportunity', fmtFull(annualOpportunity, sym));
     setText('sub-opportunity', costOfEquityPct.toFixed(2) + '% az ingatlanárból');
-    setText('val-interest', fmtFull(realAnnualInterest, sym));
+    setText('val-interest', fmtFull(adjusted.interest, sym));
     setText('sub-interest', costOfDebtPctAdj.toFixed(2) + '% az ingatlanárból (vs ' + costOfDebtPctSimple.toFixed(2) + '% egyszerű)');
 
     // Bontás táblázat — egyszerű és korrigált is
@@ -436,18 +450,18 @@ function calculate() {
 
     tbody.innerHTML = '';
     const rows = [
-        ['Ingatlanadó', propertyTax, annualPropertyTax, propertyTax, annualPropertyTax],
-        ['Karbantartás', maintenance, annualMaintenance, maintenance, annualMaintenance],
-        ['Önerő alternatív költsége', costOfEquityPct, annualOpportunity, costOfEquityPct, annualOpportunity],
-        ['Hitelkamat', costOfDebtPctSimple, annualInterestSimple, costOfDebtPctAdj, realAnnualInterest],
+        ['Ingatlanadó',              propertyTax,         propertyTax,         annualPropertyTax],
+        ['Karbantartás',             maintenance,         maintenance,         annualMaintenance],
+        ['Önerő alternatív költsége', costOfEquityPct,    costOfEquityPctAdj,  adjusted.opportunityCost],
+        ['Hitelkamat',               costOfDebtPctSimple, costOfDebtPctAdj,    adjusted.interest],
     ];
-    rows.forEach(([label, pctSimple, costSimple, pctAdj, costAdj]) => {
+    rows.forEach(([label, pctSimple, pctAdj, costAdj]) => {
         const tr = document.createElement('tr');
         tr.innerHTML = `<td class="row-label">${label}</td><td class="row-pct">${pctSimple.toFixed(2)}%</td><td class="row-pct">${pctAdj.toFixed(2)}%</td><td class="row-value">${fmtFull(costAdj, sym)}</td>`;
         tbody.appendChild(tr);
     });
     // Összesítő sor
-    const totalAnnualAdj = annualPropertyTax + annualMaintenance + annualOpportunity + realAnnualInterest;
+    const totalAnnualAdj = annualPropertyTax + annualMaintenance + adjusted.opportunityCost + adjusted.interest;
     const totalTr = document.createElement('tr');
     totalTr.className = 'total-row';
     totalTr.innerHTML = `<td><strong>Összesen</strong></td><td class="row-pct"><strong>${simpleRule.toFixed(2)}%</strong></td><td class="row-pct"><strong>${adjustedRule.toFixed(2)}%</strong></td><td class="row-value">${fmtFull(totalAnnualAdj, sym)}</td>`;
@@ -462,7 +476,7 @@ function calculate() {
         data: {
             labels: ['Ingatlanadó', 'Karbantartás', 'Alternatív költség', 'Hitelkamat (korr.)'],
             datasets: [{
-                data: [propertyTax, maintenance, costOfEquityPct, costOfDebtPctAdj],
+                data: [propertyTax, maintenance, costOfEquityPctAdj, costOfDebtPctAdj],
                 backgroundColor: [
                     'rgba(234, 88, 12, 0.7)',
                     'rgba(99, 102, 241, 0.7)',
