@@ -865,6 +865,7 @@ function calculate() {
     const summaryRows    = [];
     let activeCardData   = null;
     let activeSeriesData = null;
+    const tc = getChartColors();
 
     for (let si = 0; si < scenarioCount; si++) {
         const sc    = scenarios[si];
@@ -973,7 +974,6 @@ function calculate() {
     }
 
     // ── Diagram ──
-    const tc = getChartColors();
     if (chartInstance) chartInstance.destroy();
 
     if (chartMode === 'breakdown') {
