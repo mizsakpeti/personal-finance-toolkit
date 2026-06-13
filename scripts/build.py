@@ -4,12 +4,19 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
+import logging
 
 from jinja2 import Environment, FileSystemLoader
 
 ROOT = Path(__file__).resolve().parent.parent
 TEMPLATES_DIR = ROOT / "templates"
 DOCS_DIR = ROOT / "docs"
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+)
+logger = logging.getLogger(__name__)
 
 
 def build() -> None:
@@ -31,20 +38,20 @@ def build() -> None:
         out_name = str(rel).replace(".html.jinja", ".html")
         out_path = DOCS_DIR / out_name
 
-        template = env.get_template(str(rel))
+        template = env.get_template(rel.as_posix())
         html = template.render()
 
         out_path.parent.mkdir(parents=True, exist_ok=True)
-        out_path.write_text(html)
+        out_path.write_text(html, encoding="utf-8")
         rendered += 1
-        print(f"  {rel} -> docs/{out_name}")
+        logger.info("  %s -> docs/%s", rel, out_name)
 
-    print(f"\nRendered {rendered} templates into docs/")
+    logger.info("  %s templates rendered into docs/", rendered)
 
 
 if __name__ == "__main__":
     try:
         build()
     except Exception as exc:
-        print(f"Build failed: {exc}", file=sys.stderr)
+        logger.exception("Build failed: %s", exc)
         sys.exit(1)
