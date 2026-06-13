@@ -294,6 +294,7 @@ function calculate() {
     const rInfl    = parseFloat(document.getElementById('inflationRate').value) / 100;
     const n        = parseInt(document.getElementById('years').value);
     const showReal = document.getElementById('realToggle').checked;
+    const tc       = getChartColors();
 
     if ([P, rDep, rBond, rInfl, n].some(v => isNaN(v) || v < 0) || n < 1) return;
 
