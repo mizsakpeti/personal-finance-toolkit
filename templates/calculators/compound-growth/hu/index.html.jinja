@@ -288,7 +288,7 @@
             <ul>
                 <li>A rendszeres havi befizetések az évek során drámaian felhalmozódnak — még a szerényebb összegek is.</li>
                 <li>A korai kezdés fontosabb a nagy befizetéseknél. Az 5 éves késlekedés általában a végső portfólió 30-40%-ába kerül.</li>
-                <li>A díjak csendben erodálják a hozamot: 1,5%-os éves költség vs. 0,2%-os index ETF 20 év alatt akár több millió forintos különbséget jelent.</li>
+                <li>A díjak csendben erodálják a hozamot: 1,5%-os éves költség vs. 0,2%-os index ETF 20 év alatt több mint kétmillió forintos különbséget jelent.</li>
             </ul>
             <a href="#calculator">↓ Ugrás a kalkulátorhoz</a>
         </div>
@@ -535,7 +535,7 @@
 
         <div class="insight-box">
             <strong>A kamatos kamat meglepetése</strong>
-            Egy 20 éves időtávon, havi 30 000 Ft befizetéssel és 7%-os keverékhozammal a végső portfólióérték kb. 55-60%-a a kamatos kamatból ered — nem a befizetett összegből. Akik ezt először látják, általában nehezen hiszik el.
+            Egy 20 éves időtávon, havi 30 000 Ft befizetéssel és az alapértelmezett 7,25%-os keverékhozammal a végső portfólióérték valamivel több mint fele — nagyjából 52%-a — a kamatos kamatból ered, nem a befizetett összegből. 25 éves időtávon ez már meghaladja a 60%-ot.
         </div>
 
         <h2>Mi a következő lépés?</h2>
@@ -565,9 +565,11 @@
             $$r_{\text{nettó}} = r_{\text{keverék}} - r_{\text{díj}}$$
             $$P_{m+1} = P_m \cdot \left(1 + \frac{r_{\text{nettó}}}{12}\right) + C_{\text{hónap}}$$
             $$C_{\text{év}+1} = C_{\text{év}} \cdot (1 + g)$$
-            $$\text{Reálérték} = \frac{FV}{(1 + r_{\text{infláció}})^n}$$
+            $$\text{Reál portfólióérték} = \frac{P_n}{(1 + r_{\text{infláció}})^n}$$
+            $$\text{Reál befizetés} = \sum_{m=1}^{12n} \frac{C_m}{(1 + r_{\text{infláció}})^{m/12}}$$
         </div>
         <p>Ahol <em>w</em> a portfólió súlyok (összegük 1), <em>C</em> a havi befizetés, <em>g</em> az éves befizetés-növekedési ráta, és <em>n</em> az évek száma. A díjmentes ideális görbe <em>r</em><sub>keverék</sub>-et használ <em>r</em><sub>nettó</sub> helyett.</p>
+        <p>A két inflációs korrekció azért tér el, mert más természetű dolgot ír le. A portfólió egyenlege <em>állomány</em> — egyetlen összeg egyetlen időpontban —, ezért egyszer, a teljes időtávval értékelődik le. A befizetés <em>folyam</em>: minden egyes befizetést a saját hónapjától diszkontálunk, mert egy első évi befizetés sokkal több vásárlóerőbe kerül, mint ugyanakkora névleges összeg a 20. évben. Az adó a névleges nyereség után számolódik, mivel az SZJA nem indexál inflációval; a megjelenő reálérték ennek a névleges adónak a leértékelt összege.</p>
         <p class="disclaimer">Az előbeállított értékek a 2025-ös körülmények közelítő adatai. A magyar kötvényhozam a PMÁP / FIXMÁP termékeken alapul; a részvényhozam az MSCI World historikus nominális hozamán. Az eurózónás kötvényhozam az EU-s átlagos állampapírhozamokon alapul. Minden hozam adózás előtti, nominális — kivéve, ha az inflációs kapcsoló be van kapcsolva. A múltbeli hozamok nem garantálják a jövőbeli teljesítményt. Nem pénzügyi tanácsadás.</p>
     </div>
 </div>
@@ -611,6 +613,11 @@ function fmtShort(value, sym) {
     return sym === 'Ft' ? sign + s + ' Ft' : sign + sym + ' ' + s;
 }
 function pct(v) { return v.toFixed(2) + '%'; }
+// Az arány 0/0, ha még semmit sem fizettek be.
+function shareOf(part, whole, prefix) {
+    if (!whole) return '—';
+    return prefix + ' ' + pct(part / whole * 100) + '-a';
+}
 function setText(id, text) { document.getElementById(id).textContent = text; }
 
 /* ── Forgatókönyv színek ── */
@@ -823,31 +830,39 @@ function recalculate() {
 }
 
 /* ── Kalkulációs motor ── */
-function calcSeries(startAmount, monthlyContrib, bondPct, stockPct, bondYield, stockYield, expRatio, contribGrowth, years) {
+function calcSeries(startAmount, monthlyContrib, bondPct, stockPct, bondYield, stockYield, expRatio, contribGrowth, years, inflationRate) {
     const grossRate = (bondPct / 100) * (bondYield / 100) + (stockPct / 100) * (stockYield / 100);
     const netRate   = grossRate - expRatio / 100;
+    const inflRate  = (inflationRate || 0) / 100;
 
     const portfolioNet   = [startAmount];
     const portfolioGross = [startAmount];
     const contributions  = [startAmount];
+    const realContrib    = [startAmount];
 
     let pNet   = startAmount;
     let pGross = startAmount;
     let contrib = monthlyContrib;
     let totalContrib = startAmount;
+    // Minden befizetést a tényleges hónapjától diszkontálunk, így ez valódi jelenérték.
+    // A halmozott összeg egyetlen, futamidő végi szorzóval való leosztása úgy árazná
+    // a korábbi befizetéseket, mintha mind az utolsó napon történt volna.
+    let pvContrib = startAmount;
 
     for (let y = 1; y <= years; y++) {
         for (let m = 0; m < 12; m++) {
             pNet   = pNet   * (1 + netRate   / 12) + contrib;
             pGross = pGross * (1 + grossRate  / 12) + contrib;
             totalContrib += contrib;
+            pvContrib    += contrib / Math.pow(1 + inflRate, ((y - 1) * 12 + m + 1) / 12);
         }
         contrib *= (1 + contribGrowth / 100);
         portfolioNet.push(pNet);
         portfolioGross.push(pGross);
         contributions.push(totalContrib);
+        realContrib.push(pvContrib);
     }
-    return { portfolioNet, portfolioGross, contributions };
+    return { portfolioNet, portfolioGross, contributions, realContrib };
 }
 
 /* ── Fő calculate() ── */
@@ -874,14 +889,16 @@ function calculate() {
         const n     = sc.years;
         const color = SCENARIO_COLORS[si];
 
-        const { portfolioNet, portfolioGross, contributions } =
+        const { portfolioNet, portfolioGross, contributions, realContrib } =
             calcSeries(sc.startAmount, sc.monthlyContrib, bpct, spct,
-                       sc.bondYield, sc.stockYield, sc.expenseRatio, sc.contribGrowth, n);
+                       sc.bondYield, sc.stockYield, sc.expenseRatio, sc.contribGrowth, n,
+                       sc.inflationRate);
 
+        // A portfólióérték állomány: az y. évi egyenleget y év inflációja értékeli le.
+        // A befizetés folyam, azt a calcSeries diszkontálja befizetésenként, nem itt.
         const deflator    = Array.from({ length: n + 1 }, (_, y) => Math.pow(1 + sc.inflationRate / 100, y));
         const realNet     = portfolioNet.map((v, y) => v / deflator[y]);
         const realGross   = portfolioGross.map((v, y) => v / deflator[y]);
-        const realContrib = contributions.map((v, y) => v / deflator[y]);
 
         const padNull = arr => { const out = [...arr]; while (out.length <= maxYears) out.push(null); return out; };
         const netData  = padNull(showReal ? realNet    : portfolioNet);
@@ -899,11 +916,15 @@ function calculate() {
         const rvDrag    = rvGross - rvNet;
         const rvGrowth  = rvNet - rvContrib;
 
-        const gainsTax   = Math.max(0, fvGrowth)  * 0.15;
-        const tax        = isTbsz ? 0 : gainsTax;
+        // Az SZJA a *névleges* nyereséget terheli, inflációs indexálás nélkül, ezért a
+        // reálérték a névleges adó leértékelve — nem a reálnyereség 15%-a, ami alábecsülné.
+        // A TBSZ csak az 5 éves lekötés letelte után mentesít.
+        const tbszExempt = isTbsz && n >= 5;
+        const gainsTax   = Math.max(0, fvGrowth) * 0.15;
+        const tax        = tbszExempt ? 0 : gainsTax;
         const afterTax   = fvNet - tax;
-        const rvGainsTax = Math.max(0, rvGrowth) * 0.15;
-        const rvTax      = isTbsz ? 0 : rvGainsTax;
+        const rvGainsTax = gainsTax / deflator[n];
+        const rvTax      = tbszExempt ? 0 : rvGainsTax;
         const rvAfterTax = rvNet - rvTax;
 
         summaryRows.push({ name: sc.name, afterTax, fvContrib, fvGrowth, fvDrag, gainsTax,
@@ -957,7 +978,7 @@ function calculate() {
         setText('real-contrib','Nominális: ' + fmtFull(fvContrib, sym));
         setText('val-growth',  fmtFull(rvGrowth, sym));
         setText('sub-growth',  'kamatos kamat összesen (reál)');
-        setText('real-growth', 'A befizetések ' + pct(rvGrowth / rvContrib * 100) + '-a');
+        setText('real-growth', shareOf(rvGrowth, rvContrib, 'A befizetések'));
         setText('val-drag',    fmtFull(rvDrag, sym));
         setText('sub-drag',    'díjakra elveszett ' + n + ' év alatt (reál)');
         setText('real-drag',   'Nominális díjveszteség: ' + fmtFull(fvDrag, sym));
@@ -967,7 +988,7 @@ function calculate() {
         setText('real-contrib','Reálérték: ' + fmtFull(rvContrib, sym));
         setText('val-growth',  fmtFull(fvGrowth, sym));
         setText('sub-growth',  'kamatos kamat összesen');
-        setText('real-growth', 'Az összes befizetés ' + pct(fvGrowth / fvContrib * 100) + '-a');
+        setText('real-growth', shareOf(fvGrowth, fvContrib, 'Az összes befizetés'));
         setText('val-drag',    fmtFull(fvDrag, sym));
         setText('sub-drag',    'díjakra elveszett ' + n + ' év alatt');
         setText('real-drag',   'Reál díjveszteség: ' + fmtFull(rvDrag, sym));
@@ -1114,7 +1135,8 @@ function calculate() {
         let finalVal = sc.startAmount;
         if (effYears > 0) {
             const del = calcSeries(sc.startAmount, sc.monthlyContrib, bpct, spct,
-                sc.bondYield, sc.stockYield, sc.expenseRatio, sc.contribGrowth, effYears);
+                sc.bondYield, sc.stockYield, sc.expenseRatio, sc.contribGrowth, effYears,
+                sc.inflationRate);
             const raw        = del.portfolioNet[effYears];
             const delGrowth  = raw - del.contributions[effYears];
             const delTax     = (isTbsz && effYears >= 5) ? 0 : Math.max(0, delGrowth) * 0.15;
