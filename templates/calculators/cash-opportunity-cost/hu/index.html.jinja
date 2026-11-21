@@ -338,7 +338,6 @@ function calculate() {
         document.getElementById('real-cost').textContent    = 'Reális elmaradt hozam: ' + fmtFull(realCost, sym);
     }
 
-    const tc = getChartColors();
     const labels = Array.from({ length: pts }, (_, i) => i + '. év');
     document.getElementById('chart-title').textContent = showReal
         ? 'Mai vásárlóerőn (inflációval korrigálva)'
