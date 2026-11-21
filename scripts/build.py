@@ -19,7 +19,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def build() -> None:
+def build(out_dir: Path = DOCS_DIR) -> None:
     env = Environment(
         loader=FileSystemLoader(str(TEMPLATES_DIR)),
         keep_trailing_newline=True,
@@ -36,7 +36,7 @@ def build() -> None:
 
         rel = tmpl_path.relative_to(TEMPLATES_DIR)
         out_name = str(rel).replace(".html.jinja", ".html")
-        out_path = DOCS_DIR / out_name
+        out_path = out_dir / out_name
 
         template = env.get_template(rel.as_posix())
         html = template.render()
@@ -44,9 +44,9 @@ def build() -> None:
         out_path.parent.mkdir(parents=True, exist_ok=True)
         out_path.write_text(html, encoding="utf-8")
         rendered += 1
-        logger.info("  %s -> docs/%s", rel, out_name)
+        logger.info("  %s -> %s", rel, out_path)
 
-    logger.info("  %s templates rendered into docs/", rendered)
+    logger.info("  %s templates rendered into %s", rendered, out_dir)
 
 
 if __name__ == "__main__":
