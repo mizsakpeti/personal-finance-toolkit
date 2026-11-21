@@ -113,6 +113,12 @@ wheels = [
 ]
 
 [[package]]
+name = "esprima"
+version = "4.0.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/cc/a1/50fccd68a12bcfc27adfc9969c090286670a9109a0259f3f70943390b721/esprima-4.0.1.tar.gz", hash = "sha256:08db1a876d3c2910db9cfaeb83108193af5411fc3a3a66ebefacd390d21323ee", size = 47021, upload-time = "2018-08-24T13:59:11.374Z" }
+
+[[package]]
 name = "et-xmlfile"
 version = "2.0.0"
 source = { registry = "https://pypi.org/simple" }
@@ -360,6 +366,7 @@ dev = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "esprima" },
     { name = "jinja2" },
 ]
 
@@ -377,7 +384,10 @@ requires-dist = [
 provides-extras = ["dev"]
 
 [package.metadata.requires-dev]
-dev = [{ name = "jinja2", specifier = ">=3.1.6" }]
+dev = [
+    { name = "esprima", specifier = ">=4.0.1" },
+    { name = "jinja2", specifier = ">=3.1.6" },
+]
 
 [[package]]
 name = "pluggy"
