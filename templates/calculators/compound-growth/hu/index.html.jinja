@@ -288,7 +288,7 @@
             <ul>
                 <li>A rendszeres havi befizetések az évek során drámaian felhalmozódnak — még a szerényebb összegek is.</li>
                 <li>A korai kezdés fontosabb a nagy befizetéseknél. Az 5 éves késlekedés általában a végső portfólió 30-40%-ába kerül.</li>
-                <li>A díjak csendben erodálják a hozamot: 1,5%-os éves költség vs. 0,2%-os index ETF 20 év alatt több mint kétmillió forintos különbséget jelent.</li>
+                <li>A díjak csendben erodálják a hozamot: 1,5%-os éves költség vs. 0,2%-os index ETF 20 év alatt a végső portfólió nagyjából 14%-át viszi el — és ez az arány független attól, mennyit fizetsz be havonta.</li>
             </ul>
             <a href="#calculator">↓ Ugrás a kalkulátorhoz</a>
         </div>
@@ -894,8 +894,8 @@ function calculate() {
                        sc.bondYield, sc.stockYield, sc.expenseRatio, sc.contribGrowth, n,
                        sc.inflationRate);
 
-        // A portfólióérték állomány: az y. évi egyenleget y év inflációja értékeli le.
-        // A befizetés folyam, azt a calcSeries diszkontálja befizetésenként, nem itt.
+        // Az egyenleg állomány, egyszer, a teljes időtávval értékelődik le. A befizetés
+        // folyam — azt a calcSeries diszkontálja befizetésenként, ezért itt szándékosan nincs.
         const deflator    = Array.from({ length: n + 1 }, (_, y) => Math.pow(1 + sc.inflationRate / 100, y));
         const realNet     = portfolioNet.map((v, y) => v / deflator[y]);
         const realGross   = portfolioGross.map((v, y) => v / deflator[y]);
