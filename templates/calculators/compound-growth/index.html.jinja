@@ -288,7 +288,7 @@
             <ul>
                 <li>Regular monthly contributions compound dramatically over time — even modest amounts.</li>
                 <li>Starting early matters more than starting big. Delaying by 5 years typically costs around 30–40% of your final portfolio.</li>
-                <li>Fees quietly eat into returns: a 1.5% annual cost vs. a 0.2% index ETF runs to over two million forints over 20 years.</li>
+                <li>Fees quietly eat into returns: a 1.5% annual cost vs. a 0.2% index ETF removes roughly 14% of your final portfolio over 20 years — the same share whatever you contribute each month.</li>
             </ul>
             <a href="#calculator">↓ Jump to the calculator</a>
         </div>
@@ -887,8 +887,8 @@ function calculate() {
                        sc.bondYield, sc.stockYield, sc.expenseRatio, sc.contribGrowth, n,
                        sc.inflationRate);
 
-        // Portfolio values are stocks: a balance at year y deflates by y years. Contributions
-        // are a flow and are discounted per deposit inside calcSeries, not here.
+        // Balances are a stock, deflated once by the horizon. Contributions are a flow —
+        // calcSeries discounts them per deposit, so they are deliberately absent here.
         const deflator    = Array.from({ length: n + 1 }, (_, y) => Math.pow(1 + sc.inflationRate / 100, y));
         const realNet     = portfolioNet.map((v, y) => v / deflator[y]);
         const realGross   = portfolioGross.map((v, y) => v / deflator[y]);
